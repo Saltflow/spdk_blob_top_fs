@@ -109,16 +109,12 @@ static int hello_bdev_parse_arg(int ch, char *arg)
 // 	spdk_bs_create_blob(bs, create_complete, context);
 	
 // }
-
-void bridge(void* arg1) {
-	struct hello_context_t* context = arg1;
-	struct spdk_bs_bdev* bdev = NULL;
-	bool init_finished = false;
-	spdk_thread_send_msg(spdk_get_thread, init_spdk_filesystem, &init_finished);
-	do {
-	spdk_thread_poll(spdk_get_thread(), 0, 0);
-	}while (!init_finished);
+#include "simple_fs/super.c"
 	
+void bridge(void* arg1) {
+	SPDK_WARNLOG("Is there a interception?\n");
+	SPDK_WARNLOG("%s \n",spdk_bdev_get_name( spdk_bdev_first()));
+	load_simple_spdk_fs();
 }
 
 int

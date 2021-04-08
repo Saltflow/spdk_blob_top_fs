@@ -30,6 +30,10 @@ struct spdk_filesystem {
 
 typedef void(*spdk_fs_callback)(void* cb_arg);
 
+struct spdk_fs_context{
+	struct spdk_filesystem* fs;
+	bool* finished;
+};
 
 struct spdkfs_file {
 	struct spdk_blob* _blob;
@@ -60,22 +64,22 @@ struct spdkfs_dirent {
 
 struct spdk_fs_operations {
 	struct spdk_blob *(*alloc_blob)(struct spdk_filesystem *sb, spdk_fs_callback cb_fn, void* cb_args);
-	void (*destroy_blob)(struct blob *, spdk_fs_callback cb_fn, void* cb_args);
-	void (*free_blob)(struct blob *, spdk_fs_callback cb_fn, void* cb_args);
+	void (*destroy_blob)(struct spdk_blob *, spdk_fs_callback cb_fn, void* cb_args);
+	void (*free_blob)(struct spdk_blob *, spdk_fs_callback cb_fn, void* cb_args);
 };
 
 struct spdk_file_operations {
 	loff_t (*spdk_lseek) (struct spdkfs_file *, loff_t, int);
 	ssize_t (*spdk_read) (struct spdkfs_file *, size_t, loff_t *);
 	ssize_t (*spdk_write) (struct spdkfs_file *, size_t, loff_t *);
-	int (*spdk_mmap) (struct spdkfs_file *, struct vm_area_struct *);
+	// int (*spdk_mmap) (struct spdkfs_file *, struct vm_area_struct *);
 	unsigned long mmap_supported_flags;
 	int (*spdk_open) (struct spdk_blob *, struct spdkfs_file *);
 	int (*spdk_release) (struct spdk_blob *, struct spdkfs_file *);
 };
 
-void init_spdk_filesystem(struct spdk_filesystem* fs, bool* done);
-void cleanup_filesystem(struct spdk_filesystem* fs);
+void init_spdk_filesystem(struct spdk_fs_context* fs_ctx);
+void cleanup_filesystem(struct spdk_fs_context* fs_ctx);
 
-void spdk_blob_stat(struct spdk_filesystem* fs);
+void spdk_blob_stat(struct spdk_fs_context* fs_ctx);
 #endif

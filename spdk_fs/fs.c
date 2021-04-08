@@ -27,22 +27,30 @@ static void spdk_init_super_block_cb(void *cb_arg, struct spdk_blob_store *bs,
     else { // Init success
         ctx->fs->bs = bs;
         ctx->fs->op_thread = spdk_get_thread();
-        SPDK_NOTICELOG("Super block load success\n");
+        if(ctx->is_loading)
+            SPDK_NOTICELOG("Super block successfully loaded\n");
+        else
+            SPDK_NOTICELOG("Super block successfully initialized\n");
         *ctx->done = true;
     }
 }
 
 // Assume the thread lib is correctly set up
-void init_spdk_filesystem(struct spdk_filesystem* fs, bool* done) {
+void init_spdk_filesystem(struct spdk_fs_context* fs_ctx) {
     struct bs_load_context* ctx = malloc(sizeof(struct bs_load_context));
     ctx->fs = malloc(sizeof(struct spdk_filesystem));
+    fs_ctx->fs = ctx->fs;
 	struct spdk_bs_bdev* bdev = NULL;
 
-	spdk_bdev_create_bs_dev_ext(spdk_bdev_get_name(spdk_bdev_first()), base_bdev_event_cb, NULL, &bdev);
+    const struct spdk_bdev* loaded_bdev = spdk_bdev_first();
+    if(!loaded_bdev) {
+        SPDK_ERRLOG("SPDK Bdev load failed!\n");
+    }
+	spdk_bdev_create_bs_dev_ext(spdk_bdev_get_name(loaded_bdev), base_bdev_event_cb, NULL, &bdev);
     
     ctx->is_loading = true;
     ctx->bdev = bdev;
-    ctx->done = done;
+    ctx->done = fs_ctx->finished;
     spdk_bs_load(ctx->bdev, NULL, spdk_init_super_block_cb, ctx);
     
 }
@@ -52,15 +60,17 @@ static void cleanup_finished_cb(void *cb_arg, int bserrno) {
     if(bserrno) {
         SPDK_ERRLOG("Clean up failed!\n");
     }
+    bool* finished = cb_arg;
+    *finished = true;
 }
 
-void cleanup_filesystem(struct spdk_filesystem* fs) {
-    spdk_bs_unload(fs->bs, cleanup_finished_cb, NULL);
+void cleanup_filesystem(struct spdk_fs_context* ctx) {
+    spdk_bs_unload(ctx->fs->bs, cleanup_finished_cb, ctx->finished);
     // TODO : fill in clean up
 }
 
-void spdk_blob_stat(struct spdk_filesystem* fs) {
-   SPDK_NOTICELOG("spdk_bs_get_cluster_size %lu\n", spdk_bs_get_cluster_size(fs->bs));
-   SPDK_NOTICELOG("spdk_bs_get_io_unit_size %lu\n", spdk_bs_get_io_unit_size(fs->bs));
-   SPDK_NOTICELOG("spdk_bs_free_cluster_count %lu\n", spdk_bs_free_cluster_count(fs->bs)); 
+void spdk_blob_stat(struct spdk_fs_context* ctx) {
+   SPDK_NOTICELOG("spdk_bs_get_cluster_size %lu\n", spdk_bs_get_cluster_size(ctx->fs->bs));
+   SPDK_NOTICELOG("spdk_bs_get_io_unit_size %lu\n", spdk_bs_get_io_unit_size(ctx->fs->bs));
+   SPDK_NOTICELOG("spdk_bs_free_cluster_count %lu\n", spdk_bs_free_cluster_count(ctx->fs->bs));
 }

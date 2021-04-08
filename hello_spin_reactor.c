@@ -113,8 +113,11 @@ static int hello_bdev_parse_arg(int ch, char *arg)
 void bridge(void* arg1) {
 	struct hello_context_t* context = arg1;
 	struct spdk_bs_bdev* bdev = NULL;
-	bool init_finished;
-	init_spdk_filesystem(&init_finished);
+	bool init_finished = false;
+	spdk_thread_send_msg(spdk_get_thread, init_spdk_filesystem, &init_finished);
+	do {
+	spdk_thread_poll(spdk_get_thread(), 0, 0);
+	}while (!init_finished);
 	
 }
 

@@ -15,8 +15,12 @@
 
 #define SPDK_MAX_FILE_CNT 256
 
+struct spdk_super_blob {
+
+};
+
 struct spdk_filesystem {
-	spdk_blob_id			super_blob;
+	struct spdk_super_blob* super_blob;
 	struct spdk_blob_store* bs;
     struct spdk_thread* op_thread;
 	
@@ -70,8 +74,8 @@ struct spdk_file_operations {
 	int (*spdk_release) (struct spdk_blob *, struct spdkfs_file *);
 };
 
-void init_spdk_filesystem(bool* done);
-void cleanup_filesystem();
-bool load_fs_ops(struct spdk_fs_operations *ops);
+void init_spdk_filesystem(struct spdk_filesystem* fs, bool* done);
+void cleanup_filesystem(struct spdk_filesystem* fs);
 
+void spdk_blob_stat(struct spdk_filesystem* fs);
 #endif

@@ -1,0 +1,10 @@
+{
+	global:
+
+	# public functions
+    init_spdk_filesystem;
+	cleanup_filesystem;
+    load_fs_ops;
+
+	local: *;
+};

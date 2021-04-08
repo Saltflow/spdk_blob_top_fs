@@ -41,6 +41,7 @@
 #include "spdk/bdev_module.h"
 #include "spdk/blob_bdev.h"
 #include "spdk/blob.h"
+#include "spdk_fs/fs.h"
 
 static char *g_bdev_name = "Malloc0";
 
@@ -82,43 +83,38 @@ static int hello_bdev_parse_arg(int ch, char *arg)
 	return 0;
 }
 
-static void
-base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
-		   void *event_ctx)
-{
-	SPDK_WARNLOG("Unsupported bdev event: type %d\n", type);
-}
+// static void
+// base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
+// 		   void *event_ctx)
+// {
+// 	SPDK_WARNLOG("Unsupported bdev event: type %d\n", type);
+// }
 
-void open_blob_complete(void *cb_arg, struct spdk_blob *blb, int bserrno) {
-	struct hello_context_t* context = cb_arg;
-	context->blob = blb;
-	spdk_blob_io_write(context->blob, )
-}
+// void open_blob_complete(void *cb_arg, struct spdk_blob *blb, int bserrno) {
+// 	struct hello_context_t* context = cb_arg;
+// 	context->blob = blb;
+// }
 
- void create_complete(void *cb_arg, spdk_blob_id blobid, int bserrno) {
-	struct hello_context_t* context = cb_arg;
-	spdk_bs_open_blob(context->bs, blobid, open_blob_complete, context);
- }
+//  void create_complete(void *cb_arg, spdk_blob_id blobid, int bserrno) {
+// 	struct hello_context_t* context = cb_arg;
+// 	spdk_bs_open_blob(context->bs, blobid, open_blob_complete, context);
+//  }
 
-static void
-bs_init_complete(void *cb_arg, struct spdk_blob_store *bs,
-		 int bserrno)
-{
-	struct hello_context_t* context = cb_arg;
-	context->bs = bs;
-	spdk_bs_create_blob(bs, create_complete, context);
+// static void
+// bs_init_complete(void *cb_arg, struct spdk_blob_store *bs,
+// 		 int bserrno)
+// {
+// 	struct hello_context_t* context = cb_arg;
+// 	context->bs = bs;
+// 	spdk_bs_create_blob(bs, create_complete, context);
 	
-}
+// }
 
 void bridge(void* arg1) {
 	struct hello_context_t* context = arg1;
 	struct spdk_bs_bdev* bdev = NULL;
-
-	spdk_bdev_create_bs_dev_ext(spdk_bdev_get_name(spdk_bdev_first()), base_bdev_event_cb, NULL, &bdev);
-
-	context->bdev = bdev;
-
-	spdk_bs_init(bdev, NULL, bs_init_complete, context);
+	bool init_finished;
+	init_spdk_filesystem(&init_finished);
 	
 }
 

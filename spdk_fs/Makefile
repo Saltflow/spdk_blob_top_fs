@@ -1,4 +1,6 @@
 #
+#  BSD LICENSE
+#
 #  Copyright (c) Intel Corporation.
 #  All rights reserved.
 #
@@ -29,16 +31,15 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../spdk)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../spdk)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = hello_src
+SO_VER := 3
+SO_MINOR := 1
 
-C_SRCS := hello_spin_reactor.c
+C_SRCS = fs.c
+LIBNAME = spdk_fs_top
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM)
-SPDK_LIB_LIST += bdev accel event thread util conf trace log jsonrpc json rpc sock notify spdk_fs_top
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_fs.map)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

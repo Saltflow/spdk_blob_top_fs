@@ -41,12 +41,9 @@ void init_spdk_filesystem(struct spdk_fs_context* fs_ctx) {
     ctx->fs = malloc(sizeof(struct spdk_filesystem));
     fs_ctx->fs = ctx->fs;
 	struct spdk_bs_bdev* bdev = NULL;
+    assert(fs_ctx->spdk_bdev_name);
 
-    const struct spdk_bdev* loaded_bdev = spdk_bdev_first();
-    if(!loaded_bdev) {
-        SPDK_ERRLOG("SPDK Bdev load failed!\n");
-    }
-	spdk_bdev_create_bs_dev_ext(spdk_bdev_get_name(loaded_bdev), base_bdev_event_cb, NULL, &bdev);
+	spdk_bdev_create_bs_dev_ext(fs_ctx->spdk_bdev_name, base_bdev_event_cb, NULL, &bdev);
     
     ctx->is_loading = true;
     ctx->bdev = bdev;

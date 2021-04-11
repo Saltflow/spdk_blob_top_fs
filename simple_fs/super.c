@@ -1,4 +1,4 @@
-// #include "spdk_fs/fs.h"
+#include "spdk_fs/fs.h"
 
 struct spdk_filesystem* g_filesystem;
 struct spdk_thread* g_spdkfs_thread;
@@ -35,6 +35,7 @@ void load_fs_operations(){
 }
 
 struct spdk_blob *simple_fs_alloc_blob(struct spdk_filesystem *fs, spdk_fs_callback cb_fn, void* cb_args) {
+    spdk_blob_close()
 }
 
 void simple_fs_destroy_blob(struct spdk_blob *blob, spdk_fs_callback cb_fn, void* cb_args) {

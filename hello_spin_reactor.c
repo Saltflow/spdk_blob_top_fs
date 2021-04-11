@@ -51,7 +51,7 @@ static char *g_bdev_name = "Malloc0";
  */
 struct hello_context_t {
 	struct spdk_bs_bdev *bdev;
-	struct spdk_blob *blob; 
+	struct spdk_blob *blob;
 	struct spdk_blob_store *bs;
 	struct spdk_io_channel *bdev_io_channel;
 	char *buff;
@@ -107,10 +107,10 @@ static int hello_bdev_parse_arg(int ch, char *arg)
 // 	struct hello_context_t* context = cb_arg;
 // 	context->bs = bs;
 // 	spdk_bs_create_blob(bs, create_complete, context);
-	
+
 // }
 #include "simple_fs/super.c"
-	
+
 void bridge(void* arg1) {
 	SPDK_WARNLOG("Is there a interception?\n");
 	SPDK_WARNLOG("%s \n",spdk_bdev_get_name( spdk_bdev_first()));
@@ -128,7 +128,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts);
 	opts.name = "hello_bdev";
 	opts.reactor_mask="0x3";
-	
+
 
 	/*
 	 * Parse built-in SPDK command line parameters as well
@@ -158,7 +158,7 @@ main(int argc, char **argv)
 	// spdk_set_thread(mask_thread);
 
 	// spdk_thread_send_msg(g_spdk_app_thread, hello_start, &hello_context);
-	
+
 	rc = spdk_app_start(&opts, bridge, &hello_context);
 	if (rc) {
 		SPDK_ERRLOG("ERROR starting application\n");

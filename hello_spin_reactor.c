@@ -111,9 +111,10 @@ static int hello_bdev_parse_arg(int ch, char *arg)
 // }
 #include "simple_fs/super.c"
 
-void bridge(void* arg1) {
+void bridge(void *arg1)
+{
 	SPDK_WARNLOG("Is there a interception?\n");
-	SPDK_WARNLOG("%s \n",spdk_bdev_get_name( spdk_bdev_first()));
+	SPDK_WARNLOG("%s \n", spdk_bdev_get_name(spdk_bdev_first()));
 	load_simple_spdk_fs();
 }
 
@@ -127,7 +128,7 @@ main(int argc, char **argv)
 	/* Set default values in opts structure. */
 	spdk_app_opts_init(&opts);
 	opts.name = "hello_bdev";
-	opts.reactor_mask="0x3";
+	opts.reactor_mask = "0x3";
 
 
 	/*

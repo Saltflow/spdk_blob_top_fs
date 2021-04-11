@@ -16,20 +16,20 @@
 #define SPDK_MAX_NAME_COUNT 256
 
 struct spdk_super_blob {
-	struct spdkfs_dir* root;
-	// unnecessary struct spdk_blob* persist_ctx; 
+	struct spdkfs_dir *root;
+	// unnecessary struct spdk_blob* persist_ctx;
 };
 
 struct spdk_filesystem {
-	struct spdk_super_blob* super_blob;
-	struct spdk_blob_store* bs;
-    struct spdk_thread* op_thread;
-	
-	struct spdk_fs_operations* operations;
+	struct spdk_super_blob *super_blob;
+	struct spdk_blob_store *bs;
+	struct spdk_thread *op_thread;
+
+	struct spdk_fs_operations *operations;
 
 };
 
-typedef void(*spdk_fs_callback)(void* cb_arg);
+typedef void(*spdk_fs_callback)(void *cb_arg);
 
 
 struct spdkfs_file_persist_ctx {
@@ -43,7 +43,7 @@ struct spdkfs_file_persist_ctx {
 	long	i_ctime;
 	size_t f_size;
 	unsigned int	i_writecount;
-}__attribute__((aligned(4)));
+} __attribute__((aligned(4)));
 
 struct spdkfs_file {
 	unsigned int 		f_flags;
@@ -54,12 +54,12 @@ struct spdkfs_file {
 
 };
 struct fdtable {
-    // struct pthread_mutex_spinlock lock;
-    struct spdkfs_file *open_files[SPDK_MAX_FILE_CNT];
+	// struct pthread_mutex_spinlock lock;
+	struct spdkfs_file *open_files[SPDK_MAX_FILE_CNT];
 };
 
 struct spdkfs_dir {
-	struct blob* blob;
+	struct blob *blob;
 	const struct spdk_file_operations	*d_op;
 	unsigned int d_flags;
 
@@ -70,8 +70,8 @@ struct spdkfs_dir {
 struct spdkfs_dirent_persist_ctx {
 	char _name[SPDK_MAX_NAME_COUNT];
 	spdk_blob_id		id;
-	
-}__attribute__((aligned(4)));
+
+} __attribute__((aligned(4)));
 
 struct spdkfs_dirent {
 	struct spdkfs_dirent_persist_ctx d_ctx;
@@ -80,30 +80,30 @@ struct spdkfs_dirent {
 };
 
 struct spdk_fs_operations {
-	void (*alloc_blob)(struct spdk_filesystem *sb, spdk_fs_callback cb_fn, void* cb_args);
-	void (*destroy_blob)(struct spdk_blob *, spdk_fs_callback cb_fn, void* cb_args);
-	void (*free_blob)(struct spdk_blob *, spdk_fs_callback cb_fn, void* cb_args);
+	void (*alloc_blob)(struct spdk_filesystem *sb, spdk_fs_callback cb_fn, void *cb_args);
+	void (*destroy_blob)(struct spdk_blob *, spdk_fs_callback cb_fn, void *cb_args);
+	void (*free_blob)(struct spdk_blob *, spdk_fs_callback cb_fn, void *cb_args);
 };
 
 struct spdk_file_operations {
-	void (*spdk_lseek) (struct spdkfs_file *, loff_t, int, void*);
-	void (*spdk_read) (struct spdkfs_file *, size_t, loff_t *, void*);
-	void (*spdk_write) (struct spdkfs_file *, size_t, loff_t *, void*);
+	void (*spdk_lseek)(struct spdkfs_file *, loff_t, int, void *);
+	void (*spdk_read)(struct spdkfs_file *, size_t, loff_t *, void *);
+	void (*spdk_write)(struct spdkfs_file *, size_t, loff_t *, void *);
 	// int (*spdk_mmap) (struct spdkfs_file *, struct vm_area_struct *);
 	unsigned long mmap_supported_flags;
-	void (*spdk_open) (struct spdk_blob *, struct spdkfs_file *, void*);
-	void (*spdk_create) (struct spdk_blob *, struct spdkfs_file *, void*);
-	void (*spdk_release) (struct spdk_blob *, struct spdkfs_file *, void*);
+	void (*spdk_open)(struct spdk_blob *, struct spdkfs_file *, void *);
+	void (*spdk_create)(struct spdk_blob *, struct spdkfs_file *, void *);
+	void (*spdk_release)(struct spdk_blob *, struct spdkfs_file *, void *);
 };
 
 struct spdk_fs_context {
-	struct spdk_filesystem* fs;
-	const char* spdk_bdev_name;
-	bool* finished;
+	struct spdk_filesystem *fs;
+	const char *spdk_bdev_name;
+	bool *finished;
 };
 
-void init_spdk_filesystem(struct spdk_fs_context* fs_ctx);
-void cleanup_filesystem(struct spdk_fs_context* fs_ctx);
+void init_spdk_filesystem(struct spdk_fs_context *fs_ctx);
+void cleanup_filesystem(struct spdk_fs_context *fs_ctx);
 
-void spdk_blob_stat(struct spdk_fs_context* fs_ctx);
+void spdk_blob_stat(struct spdk_fs_context *fs_ctx);
 #endif

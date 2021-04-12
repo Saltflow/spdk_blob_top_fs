@@ -2,3 +2,5 @@ hello_bdev
 hello_src
 *.d
 *.o
+*.so.*
+*.so

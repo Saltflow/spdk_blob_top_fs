@@ -7,8 +7,21 @@ struct spdk_thread *g_spdkfs_thread;
 
 __attribute__((constructor)) void load_simple_spdk_fs();
 
+static void spdk_init() 
+{
+	struct spdk_env_opts opts;
+	spdk_env_opts_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		SPDK_ERRLOG("Unable to initialize SPDK env\n");
+		return 1;
+	}
+	spdk_thread_lib_init(NULL, 0);
+	spdk_thread*
+}
+
 void load_simple_spdk_fs()
 {
+	spdk_init();
 	g_spdkfs_thread =  spdk_thread_create("spdkfs_thread", NULL);
 	spdk_set_thread(g_spdkfs_thread);
 	struct spdk_fs_context ctx;

@@ -121,58 +121,5 @@ void bridge(void *arg1)
 int
 main(int argc, char **argv)
 {
-	struct spdk_app_opts opts = {};
-	int rc = 0;
-	struct hello_context_t hello_context = {};
-
-	/* Set default values in opts structure. */
-	spdk_app_opts_init(&opts);
-	opts.name = "hello_bdev";
-	opts.reactor_mask = "0x3";
-
-
-	/*
-	 * Parse built-in SPDK command line parameters as well
-	 * as our custom one(s).
-	 */
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "b:", NULL, hello_bdev_parse_arg,
-				      hello_bdev_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
-		exit(rc);
-	}
-	hello_context.bdev_name = g_bdev_name;
-
-	/*
-	 * spdk_app_start() will initialize the SPDK framework, call hello_start(),
-	 * and then block until spdk_app_stop() is called (or if an initialization
-	 * error occurs, spdk_app_start() will return with rc even without calling
-	 * hello_start().
-	 */
-
-	// pthread_t new_thread;
-	// struct bridge_args init_args = {&opts, hello_start, &hello_context};
-	// pthread_create(&new_thread, NULL, bridge, &init_args);
-	// sem_wait(&g_init_sem);
-	// // SPDK_WARNLOG("Initializing finished\n");
-	// struct spdk_event* hello_event = spdk_event_allocate(0, hello_start, &hello_context, NULL);
-	// spdk_event_call(hello_event);
-	// struct spdk_thread* mask_thread =  spdk_thread_create("mask_thread", NULL);
-	// spdk_set_thread(mask_thread);
-
-	// spdk_thread_send_msg(g_spdk_app_thread, hello_start, &hello_context);
-
-	// rc = spdk_app_start(&opts, bridge, &hello_context);
-	if (rc) {
-		SPDK_ERRLOG("ERROR starting application\n");
-	}
-
-	/* At this point either spdk_app_stop() was called, or spdk_app_start()
-	 * failed because of internal error.
-	 */
-
-	/* When the app stops, free up memory that we allocated. */
-	spdk_dma_free(hello_context.buff);
-
-	/* Gracefully close out all of the SPDK subsystems. */
-	spdk_app_fini();
-	return rc;
+	SPDK_WARNLOG("Preload finished, entering user program...\n");
 }

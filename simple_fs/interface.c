@@ -1,5 +1,7 @@
 #include "interface.h"
 
+static struct fdtable g_spdk_fdtable;
+
 static bool spdk_ptop_blobfile(const char *__file)
 {
 	if (strlen(__file) < 5) {
@@ -24,6 +26,11 @@ int __spdk__open(const char *__file, int __oflag, ...)
 	// Create
 	if (__oflag | O_CREAT != 0) {
 		printf("create !");
+		if(g_spdk_fdtable._file_count > SPDK_MAX_FILE_CNT) {
+			SPDK_ERRLOG("FD table already full!\n");
+			return -1;
+		}
+		get_fs_instance()->bs
 	}
 
 }
@@ -45,8 +52,8 @@ ssize_t __spdk_read(int __fd, void *__buf, size_t __nbytes)
 }
 ssize_t __spdk_write(int __fd, const void *__buf, size_t __nbytes)
 {
-	//printf("overiding write!!!\n");
-	return syscall(SYS_write, __fd, __buf, __nbytes);
+	if(__fd < TESTFD)
+		return syscall(SYS_write, __fd, __buf, __nbytes);
 }
 __off_t __spdk_lseek(int __fd, __off_t __offset, int __whence)
 {

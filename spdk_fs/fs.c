@@ -13,6 +13,18 @@ base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 	SPDK_WARNLOG("Unsupported bdev event: type %d\n", type);
 }
 
+// spdk_bs_get_super_complete(void *cb_arg, spdk_blob_id blobid, int bserrno)
+// {
+	
+// 	struct bs_load_context *ctx = cb_arg;
+// 	if (bserrno) { // Init failed
+// 		SPDK_WARNLOG("Super blob get failed\n");
+// 		*ctx->done = true;
+// 	} else { // Init success
+// 		spdk_bs_open_blob(ctx->fs->bs, blobid, spdk_bs_sb_open_complete, ctx);
+// 	}
+// }
+
 static void spdk_init_super_block_cb(void *cb_arg, struct spdk_blob_store *bs,
 				     int bserrno)
 {
@@ -31,7 +43,7 @@ static void spdk_init_super_block_cb(void *cb_arg, struct spdk_blob_store *bs,
 		} else {
 			SPDK_NOTICELOG("Super block successfully initialized\n");
 		}
-		*ctx->done = true;
+		spdk_bs_get_super(bs, spdk_bs_get_super_complete, ctx);
 	}
 }
 

@@ -33,8 +33,14 @@ void simple_fs_lseek(struct spdkfs_file *, loff_t, int, void *);
 void simple_fs_read(struct spdkfs_file *, size_t, loff_t *, void *);
 void simple_fs_write(struct spdkfs_file *, size_t, loff_t *, void *);
 void simple_fs_open(struct spdk_blob *, struct spdkfs_file *, void *);
-void simle_fs_create(struct spdk_blob *, struct spdkfs_file *, void *);
+void simple_fs_create(struct spdk_blob *, struct spdkfs_file *, void *);
 void simple_fs_release(struct spdk_blob *, struct spdkfs_file *, void *);
+
+
+void simple_dir_read(struct spdkfs_file *, size_t, loff_t *, void *);
+void simple_dir_write(struct spdkfs_file *, size_t, loff_t *, void *);
+void simple_dir_open(struct spdk_blob *, struct spdkfs_file *, void *);
+void simple_dir_create(struct spdk_blob *, struct spdkfs_file *, void *);
 
 
 # endif

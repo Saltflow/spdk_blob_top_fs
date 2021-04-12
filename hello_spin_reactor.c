@@ -87,4 +87,5 @@ int
 main(int argc, char **argv)
 {
 	SPDK_WARNLOG("Preload finished, entering user program...\n");
+	write(STDOUT_FILENO, "Hello, write!", 20);
 }

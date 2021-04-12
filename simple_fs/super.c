@@ -6,8 +6,15 @@
 struct spdk_filesystem *g_filesystem;
 struct spdk_thread *g_spdkfs_thread;
 
+
+struct spdk_filesystem* get_fs_instance()
+{
+	return g_filesystem;
+}
+
 static const char* JSON_CONFIG_FILE = "/usr/local/etc/spdk/spdkfs.json";
 __attribute__((constructor)) void load_simple_spdk_fs();
+__attribute__((destructor)) void unload_simple_spdk_fs();
 
 static void load_fs_operations();
 
@@ -46,6 +53,11 @@ static void spdk_init()
     }
 }
 
+static void load_root()
+{
+	
+}
+
 void load_simple_spdk_fs()
 {
 	spdk_init();
@@ -58,6 +70,7 @@ void load_simple_spdk_fs()
 	SPDK_NOTICELOG("SPDK callback finished\n");
 	spdk_blob_stat(&ctx);
 	load_fs_operations();
+	load_root();
 }
 
 void simple_fs_alloc_blob(struct spdk_filesystem *fs, spdk_fs_callback cb_fn,
@@ -151,3 +164,41 @@ void simple_fs_free_blob(struct spdk_blob *blob, spdk_fs_callback cb_fn, void *c
 	spdk_blob_close(args->op_blob, close_blob_finished, cb_args);
 }
 
+
+
+static void unload_complete_cb(void *cb_arg, int bserrno)
+{
+	if(bserrno)
+	{
+		SPDK_ERRLOG("Unload blobstore failed!\n");
+	}
+	bool* done = cb_arg;
+	*done = true;
+}
+
+static void unload_bs_fn(void* ctx)
+{
+	spdk_bs_unload(g_filesystem->bs, unload_complete_cb, ctx);
+}
+
+static void stop_subsystem_complete_cb(void* ctx)
+{
+	bool* done = ctx;
+	*done = true;
+}
+
+static void stop_subsystem(void* ctx)
+{
+	spdk_subsystem_fini(stop_subsystem_complete_cb, ctx);
+}
+
+void unload_simple_spdk_fs()
+{
+	bool done = false;
+	generic_poller(g_spdkfs_thread, unload_bs_fn, &done, &done);
+	done = false;
+	generic_poller(g_spdkfs_thread, stop_subsystem_complete_cb, &done, &done);
+	spdk_thread_destroy(g_spdkfs_thread);
+	free(g_filesystem);
+	spdk_env_dpdk_post_fini();
+}

@@ -54,7 +54,7 @@ struct spdkfs_file {
 
 };
 struct fdtable {
-	// struct pthread_mutex_spinlock lock;
+	unsigned int _file_count;
 	struct spdkfs_file *open_files[SPDK_MAX_FILE_CNT];
 };
 
@@ -106,4 +106,5 @@ void init_spdk_filesystem(struct spdk_fs_context *fs_ctx);
 void cleanup_filesystem(struct spdk_fs_context *fs_ctx);
 
 void spdk_blob_stat(struct spdk_fs_context *fs_ctx);
+struct spdk_filesystem* get_fs_instance();
 #endif

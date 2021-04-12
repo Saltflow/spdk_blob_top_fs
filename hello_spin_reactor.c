@@ -41,7 +41,7 @@
 #include "spdk/bdev_module.h"
 #include "spdk/blob_bdev.h"
 #include "spdk/blob.h"
-#include "spdk_fs/fs.h"
+#include "spdkfs/fs.h"
 
 static char *g_bdev_name = "Malloc0";
 
@@ -81,41 +81,6 @@ static int hello_bdev_parse_arg(int ch, char *arg)
 		return -EINVAL;
 	}
 	return 0;
-}
-
-// static void
-// base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
-// 		   void *event_ctx)
-// {
-// 	SPDK_WARNLOG("Unsupported bdev event: type %d\n", type);
-// }
-
-// void open_blob_complete(void *cb_arg, struct spdk_blob *blb, int bserrno) {
-// 	struct hello_context_t* context = cb_arg;
-// 	context->blob = blb;
-// }
-
-//  void create_complete(void *cb_arg, spdk_blob_id blobid, int bserrno) {
-// 	struct hello_context_t* context = cb_arg;
-// 	spdk_bs_open_blob(context->bs, blobid, open_blob_complete, context);
-//  }
-
-// static void
-// bs_init_complete(void *cb_arg, struct spdk_blob_store *bs,
-// 		 int bserrno)
-// {
-// 	struct hello_context_t* context = cb_arg;
-// 	context->bs = bs;
-// 	spdk_bs_create_blob(bs, create_complete, context);
-
-// }
-#include "simple_fs/super.c"
-
-void bridge(void *arg1)
-{
-	SPDK_WARNLOG("Is there a interception?\n");
-	SPDK_WARNLOG("%s \n", spdk_bdev_get_name(spdk_bdev_first()));
-	load_simple_spdk_fs();
 }
 
 int

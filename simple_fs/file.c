@@ -45,4 +45,5 @@ void simple_dir_write(struct spdkfs_file *dir, size_t size, loff_t *buffer, void
 void simple_dir_open(struct spdk_blob *blob, struct spdkfs_file *dir, void *ctx);
 void simple_dir_create(struct spdk_blob *blob, struct spdkfs_file *dir, void *ctx)
 {
+	
 }

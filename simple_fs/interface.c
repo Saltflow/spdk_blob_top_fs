@@ -30,7 +30,6 @@ int __spdk__open(const char *__file, int __oflag, ...)
 			SPDK_ERRLOG("FD table already full!\n");
 			return -1;
 		}
-		get_fs_instance()->bs
 	}
 
 }

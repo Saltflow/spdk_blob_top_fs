@@ -17,13 +17,14 @@
 
 struct spdk_super_blob {
 	struct spdkfs_dir *root;
-	// unnecessary struct spdk_blob* persist_ctx;
+	struct spdk_blob* blob;
 };
 
 struct spdk_filesystem {
 	struct spdk_super_blob *super_blob;
 	struct spdk_blob_store *bs;
 	struct spdk_thread *op_thread;
+	struct spdk_io_channel *io_channel;
 
 	struct spdk_fs_operations *operations;
 
@@ -85,6 +86,7 @@ struct spdk_fs_operations {
 	void (*free_blob)(struct spdk_blob *, spdk_fs_callback cb_fn, void *cb_args);
 };
 
+// All file operations should be perform at upper layer
 struct spdk_file_operations {
 	void (*spdk_lseek)(struct spdkfs_file *, loff_t, int, void *);
 	void (*spdk_read)(struct spdkfs_file *, size_t, loff_t *, void *);
@@ -96,15 +98,22 @@ struct spdk_file_operations {
 	void (*spdk_release)(struct spdk_blob *, struct spdkfs_file *, void *);
 };
 
-struct spdk_fs_context {
+struct spdk_fs_init_ctx {
 	struct spdk_filesystem *fs;
 	const char *spdk_bdev_name;
 	bool *finished;
 };
 
-void init_spdk_filesystem(struct spdk_fs_context *fs_ctx);
-void cleanup_filesystem(struct spdk_fs_context *fs_ctx);
 
-void spdk_blob_stat(struct spdk_fs_context *fs_ctx);
+struct spdk_fs_generic_ctx {
+	struct spdk_filesystem *fs;
+	void *args;
+	bool *done;
+};
+
+void init_spdk_filesystem(struct spdk_fs_init_ctx *fs_ctx);
+void cleanup_filesystem(struct spdk_fs_init_ctx *fs_ctx);
+
+void spdk_blob_stat(struct spdk_fs_init_ctx *fs_ctx);
 struct spdk_filesystem* get_fs_instance();
 #endif

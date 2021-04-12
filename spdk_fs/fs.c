@@ -13,17 +13,30 @@ base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 	SPDK_WARNLOG("Unsupported bdev event: type %d\n", type);
 }
 
-// spdk_bs_get_super_complete(void *cb_arg, spdk_blob_id blobid, int bserrno)
-// {
+spdk_bs_sb_open_complete(void *cb_arg, struct spdk_blob *blb, int bserrno)
+{
+	struct bs_load_context *ctx = cb_arg;
+	if (bserrno) { // Init failed
+		SPDK_WARNLOG("Super blob open failed\n");
+		*ctx->done = true;
+		return;
+	}
+	ctx->fs->super_blob->blob = blb;
+	*ctx->done = true;
+}
+
+spdk_bs_get_super_complete(void *cb_arg, spdk_blob_id blobid, int bserrno)
+{
 	
-// 	struct bs_load_context *ctx = cb_arg;
-// 	if (bserrno) { // Init failed
-// 		SPDK_WARNLOG("Super blob get failed\n");
-// 		*ctx->done = true;
-// 	} else { // Init success
-// 		spdk_bs_open_blob(ctx->fs->bs, blobid, spdk_bs_sb_open_complete, ctx);
-// 	}
-// }
+	struct bs_load_context *ctx = cb_arg;
+	if (bserrno) { // Init failed
+		SPDK_WARNLOG("Super blob get failed\n");
+		*ctx->done = true;
+		return;
+	} else { // Init success
+		spdk_bs_open_blob(ctx->fs->bs, blobid, spdk_bs_sb_open_complete, ctx);
+	}
+}
 
 static void spdk_init_super_block_cb(void *cb_arg, struct spdk_blob_store *bs,
 				     int bserrno)
@@ -48,7 +61,7 @@ static void spdk_init_super_block_cb(void *cb_arg, struct spdk_blob_store *bs,
 }
 
 // Assume the thread lib is correctly set up
-void init_spdk_filesystem(struct spdk_fs_context *fs_ctx)
+void init_spdk_filesystem(struct spdk_fs_init_ctx *fs_ctx)
 {
 	struct bs_load_context *ctx = malloc(sizeof(struct bs_load_context));
 	ctx->fs = malloc(sizeof(struct spdk_filesystem));
@@ -75,13 +88,13 @@ static void cleanup_finished_cb(void *cb_arg, int bserrno)
 	*finished = true;
 }
 
-void cleanup_filesystem(struct spdk_fs_context *ctx)
+void cleanup_filesystem(struct spdk_fs_init_ctx *ctx)
 {
 	spdk_bs_unload(ctx->fs->bs, cleanup_finished_cb, ctx->finished);
 	// TODO : fill in clean up
 }
 
-void spdk_blob_stat(struct spdk_fs_context *ctx)
+void spdk_blob_stat(struct spdk_fs_init_ctx *ctx)
 {
 	SPDK_NOTICELOG("spdk_bs_get_cluster_size %lu\n", spdk_bs_get_cluster_size(ctx->fs->bs));
 	SPDK_NOTICELOG("spdk_bs_get_io_unit_size %lu\n", spdk_bs_get_io_unit_size(ctx->fs->bs));

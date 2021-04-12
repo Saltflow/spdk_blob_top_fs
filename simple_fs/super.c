@@ -55,7 +55,10 @@ static void spdk_init()
 
 static void load_root()
 {
-	
+	int size = spdk_blob_get_num_clusters(g_filesystem->super_blob->blob);
+	if(size == 0) {
+		
+	}
 }
 
 void load_simple_spdk_fs()
@@ -63,12 +66,17 @@ void load_simple_spdk_fs()
 	spdk_init();
 	g_spdkfs_thread =  spdk_thread_create("spdkfs_thread", NULL);
 	spdk_set_thread(g_spdkfs_thread);
-	struct spdk_fs_context ctx = {NULL, spdk_bdev_get_name(spdk_bdev_first()),  malloc(sizeof(bool))};
+	struct spdk_fs_init_ctx ctx = {NULL, spdk_bdev_get_name(spdk_bdev_first()),  malloc(sizeof(bool))};
 	*ctx.finished = false;
 	generic_poller(g_spdkfs_thread, init_spdk_filesystem, &ctx, ctx.finished);
 	g_filesystem = ctx.fs;
 	SPDK_NOTICELOG("SPDK callback finished\n");
 	spdk_blob_stat(&ctx);
+	g_filesystem->io_channel = spdk_bs_alloc_io_channel(g_filesystem->bs);
+	if(!g_filesystem->io_channel)
+	{
+		SPDK_ERRLOG("Error allocating io channel!\n");
+	}
 	load_fs_operations();
 	load_root();
 }
@@ -197,6 +205,7 @@ void unload_simple_spdk_fs()
 	bool done = false;
 	generic_poller(g_spdkfs_thread, unload_bs_fn, &done, &done);
 	done = false;
+	free(g_filesystem->io_channel);
 	generic_poller(g_spdkfs_thread, stop_subsystem_complete_cb, &done, &done);
 	spdk_thread_destroy(g_spdkfs_thread);
 	free(g_filesystem);

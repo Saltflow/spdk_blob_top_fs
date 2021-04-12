@@ -7,7 +7,7 @@ struct spdk_thread *g_spdkfs_thread;
 
 __attribute__((constructor)) void load_simple_spdk_fs();
 
-static void spdk_init() 
+static void spdk_init()
 {
 	struct spdk_env_opts opts;
 	spdk_env_opts_init(&opts);
@@ -38,7 +38,7 @@ void load_simple_spdk_fs()
 }
 
 void *simple_fs_alloc_blob(struct spdk_filesystem *fs, spdk_fs_callback cb_fn,
-				       void *cb_args);
+			   void *cb_args);
 void simple_fs_destroy_blob(struct spdk_blob *, spdk_fs_callback cb_fn, void *cb_args);
 void simple_fs_free_blob(struct spdk_blob *, spdk_fs_callback cb_fn, void *cb_args);
 
@@ -58,8 +58,8 @@ void load_fs_operations()
 
 static void open_blob_finished(void *cb_arg, struct spdk_blob *blb, int bserrno)
 {
-	struct simple_fs_cb_args* args = cb_arg;
-	if(bserrno) {
+	struct simple_fs_cb_args *args = cb_arg;
+	if (bserrno) {
 		args->status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
 		SPDK_ERRLOG("Open blob failed!\n");
 		args->done = true;
@@ -67,8 +67,7 @@ static void open_blob_finished(void *cb_arg, struct spdk_blob *blb, int bserrno)
 	}
 	args->op_blob = blb;
 	args->status = SIMPLE_OP_STATUS_SUCCCESS;
-	if(args->cb_fn)
-	{
+	if (args->cb_fn) {
 		args->cb_fn(cb_arg);
 	}
 	args->done = true;
@@ -78,7 +77,7 @@ static void open_blob_finished(void *cb_arg, struct spdk_blob *blb, int bserrno)
 static void create_blob_finished(void *cb_arg, spdk_blob_id blobid, int bserrno)
 {
 	struct simple_fs_cb_args *args = cb_arg;
-	if(bserrno) {
+	if (bserrno) {
 		args->status = SIMPLE_OP_STATUS_NO_FREE_SPACE;
 		SPDK_ERRLOG("Create blob failed!\n");
 		args->done = true;
@@ -88,17 +87,18 @@ static void create_blob_finished(void *cb_arg, spdk_blob_id blobid, int bserrno)
 }
 
 void *simple_fs_alloc_blob(struct spdk_filesystem *fs, spdk_fs_callback cb_fn,
-				       void *cb_args)
+			   void *cb_args)
 {
-	
+
 	struct simple_fs_cb_args *args = cb_args;
 	args ->cb_fn = cb_fn;
 	spdk_bs_create_blob(fs->bs, create_blob_finished,  cb_args);
 }
 
-static void delete_blob_finished(void *cb_arg, int bserrno) {
+static void delete_blob_finished(void *cb_arg, int bserrno)
+{
 	struct simple_fs_cb_args *args = cb_arg;
-	if(bserrno) {
+	if (bserrno) {
 		args->status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
 		SPDK_ERRLOG("Delete blob failed!\n");
 	}
@@ -106,14 +106,15 @@ static void delete_blob_finished(void *cb_arg, int bserrno) {
 	return;
 }
 
-void simple_fs_destroy_blob(struct spdk_blob* blob, spdk_fs_callback cb_fn, void *cb_args)
+void simple_fs_destroy_blob(struct spdk_blob *blob, spdk_fs_callback cb_fn, void *cb_args)
 {
 	spdk_bs_delete_blob(g_filesystem->bs, spdk_blob_get_id(blob), delete_blob_finished, cb_args);
 }
 
-static void close_blob_finished(void *cb_arg, int bserrno) {
+static void close_blob_finished(void *cb_arg, int bserrno)
+{
 	struct simple_fs_cb_args *args = cb_arg;
-	if(bserrno) {
+	if (bserrno) {
 		args->status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
 		SPDK_ERRLOG("Close blob failed!\n");
 	}

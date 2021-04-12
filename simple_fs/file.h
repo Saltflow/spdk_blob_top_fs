@@ -5,28 +5,28 @@
 #include"spdkfs/fs.h"
 
 enum simple_op_status {
-    SIMPLE_OP_STATUS_SUCCCESS,
+	SIMPLE_OP_STATUS_SUCCCESS,
 
-    SIMPLE_OP_STATUS_NO_FREE_SPACE,
+	SIMPLE_OP_STATUS_NO_FREE_SPACE,
 
-    SIMPLE_OP_STATUS_INVALID_PATH,
+	SIMPLE_OP_STATUS_INVALID_PATH,
 
-    SIMPLE_OP_STATUS_INVALID_SPACE,
+	SIMPLE_OP_STATUS_INVALID_SPACE,
 
-    SIMPLE_OP_STATUS_UNKNOWN_FAILURE,
+	SIMPLE_OP_STATUS_UNKNOWN_FAILURE,
 };
 
 struct file_op_cb_args {
-    bool* done;
-    struct spdk_filesystem* fs;
-    enum simple_op_status status;
+	bool *done;
+	struct spdk_filesystem *fs;
+	enum simple_op_status status;
 };
 
 struct simple_fs_cb_args {
-	bool* done;
-    enum simple_op_status status;
-    struct spdk_blob* op_blob;
-    spdk_fs_callback cb_fn;
+	bool *done;
+	enum simple_op_status status;
+	struct spdk_blob *op_blob;
+	spdk_fs_callback cb_fn;
 };
 
 void simple_fs_lseek(struct spdkfs_file *, loff_t, int, void *);

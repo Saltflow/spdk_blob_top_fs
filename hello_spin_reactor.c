@@ -160,7 +160,7 @@ main(int argc, char **argv)
 
 	// spdk_thread_send_msg(g_spdk_app_thread, hello_start, &hello_context);
 
-	rc = spdk_app_start(&opts, bridge, &hello_context);
+	// rc = spdk_app_start(&opts, bridge, &hello_context);
 	if (rc) {
 		SPDK_ERRLOG("ERROR starting application\n");
 	}

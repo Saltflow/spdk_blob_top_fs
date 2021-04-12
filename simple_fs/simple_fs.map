@@ -5,6 +5,11 @@
     
 	load_simple_spdk_fs;
 	generic_poller;
+	__spdk__open;
+	__spdk__close;
+	__spdk_read;
+	__spdk_write;
+	__spdk_lseek;
 
 	local: *;
 };

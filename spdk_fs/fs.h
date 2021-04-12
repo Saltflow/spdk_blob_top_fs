@@ -33,11 +33,9 @@ typedef void(*spdk_fs_callback)(void *cb_arg);
 
 
 struct spdkfs_file_persist_ctx {
-	loff_t			f_pos;
 	unsigned int	i_uid;
 	unsigned int	i_gid;
 	dev_t			i_rdev;
-	loff_t			i_size;
 	long	i_atime;
 	long	i_mtime;
 	long	i_ctime;
@@ -50,7 +48,9 @@ struct spdkfs_file {
 	struct spdk_blob *_blob;
 	struct spdk_filesystem *fs;
 	const struct spdk_file_operations	*f_op;
-	struct spdkfs_file_persist	*file_persist;
+	struct spdkfs_file_persist_ctx	*file_persist;
+
+	loff_t			f_pos;
 
 };
 struct fdtable {

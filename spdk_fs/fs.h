@@ -115,5 +115,4 @@ void init_spdk_filesystem(struct spdk_fs_init_ctx *fs_ctx);
 void cleanup_filesystem(struct spdk_fs_init_ctx *fs_ctx);
 
 void spdk_blob_stat(struct spdk_fs_init_ctx *fs_ctx);
-struct spdk_filesystem* get_fs_instance();
 #endif

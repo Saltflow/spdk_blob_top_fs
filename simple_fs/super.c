@@ -12,7 +12,7 @@ struct spdk_filesystem* get_fs_instance()
 	return g_filesystem;
 }
 
-static const char* JSON_CONFIG_FILE = "/usr/local/etc/spdk/spdkfs.json";
+static const char* JSON_CONFIG_FILE = "/usr/local/etc/spdk/rocksdb.json";
 __attribute__((constructor)) void load_simple_spdk_fs();
 __attribute__((destructor)) void unload_simple_spdk_fs();
 
@@ -55,9 +55,10 @@ static void spdk_init()
 
 static void load_root()
 {
-	int size = spdk_blob_get_num_clusters(g_filesystem->super_blob->blob);
+	uint64_t size = spdk_blob_get_num_clusters(g_filesystem->super_blob->blob);
+	SPDK_WARNLOG("%d\n", size);
 	if(size == 0) {
-		
+		SPDK_ERRLOG("Size = 0!\n");
 	}
 }
 
@@ -72,11 +73,6 @@ void load_simple_spdk_fs()
 	g_filesystem = ctx.fs;
 	SPDK_NOTICELOG("SPDK callback finished\n");
 	spdk_blob_stat(&ctx);
-	g_filesystem->io_channel = spdk_bs_alloc_io_channel(g_filesystem->bs);
-	if(!g_filesystem->io_channel)
-	{
-		SPDK_ERRLOG("Error allocating io channel!\n");
-	}
 	load_fs_operations();
 	load_root();
 }
@@ -184,8 +180,14 @@ static void unload_complete_cb(void *cb_arg, int bserrno)
 	*done = true;
 }
 
+static void unload_superblob_fn(void* ctx)
+{
+	spdk_blob_close(g_filesystem->super_blob->blob, unload_complete_cb, ctx);
+}
+
 static void unload_bs_fn(void* ctx)
 {
+	spdk_bs_free_io_channel(g_filesystem->io_channel);
 	spdk_bs_unload(g_filesystem->bs, unload_complete_cb, ctx);
 }
 
@@ -203,9 +205,13 @@ static void stop_subsystem(void* ctx)
 void unload_simple_spdk_fs()
 {
 	bool done = false;
+	generic_poller(g_spdkfs_thread, unload_superblob_fn, &done, &done);
+	done = false;
 	generic_poller(g_spdkfs_thread, unload_bs_fn, &done, &done);
 	done = false;
-	free(g_filesystem->io_channel);
+	generic_poller(g_spdkfs_thread, stop_subsystem_complete_cb, &done, &done);
+	spdk_thread_exit(g_spdkfs_thread);
+	done = false;
 	generic_poller(g_spdkfs_thread, stop_subsystem_complete_cb, &done, &done);
 	spdk_thread_destroy(g_spdkfs_thread);
 	free(g_filesystem);

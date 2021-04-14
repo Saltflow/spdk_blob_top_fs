@@ -1,5 +1,6 @@
 #include "spdkfs/fs.h"
 #include "file.h"
+#include "thread_poller.h"
 
 static const struct spdk_file_operations simple_ops = {
 	.spdk_lseek = simple_fs_lseek,
@@ -45,5 +46,8 @@ void simple_dir_write(struct spdkfs_file *dir, size_t size, loff_t *buffer, void
 void simple_dir_open(struct spdk_blob *blob, struct spdkfs_file *dir, void *ctx);
 void simple_dir_create(struct spdk_blob *blob, struct spdkfs_file *dir, void *ctx)
 {
-	
+	struct file_op_cb_args *cb_args = ctx;
+	dir->_blob = blob;
+	dir->fs = cb_args->fs;
+    if(spdk_blob_get_id(dir->_blob)
 }

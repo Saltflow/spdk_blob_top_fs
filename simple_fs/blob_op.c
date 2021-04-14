@@ -24,7 +24,7 @@ bool blob_create(struct spdk_blob *blob)
 }
 
 static struct spdk_fs_generic_ctx* rw_context_wrapper(struct spdk_filesystem* fs, struct spdk_blob* blob, 
-    size_t size, loff_t offset, void* buffer, bool* done) {
+    size_t size, loff_t offset, void* buffer, bool* done, bool read) {
     struct spdk_fs_rw_ctx* rw_ctx = malloc(sizeof(struct spdk_fs_rw_ctx));
     struct spdk_fs_generic_ctx *ctx = malloc(sizeof(struct spdk_fs_generic_ctx));
     ctx->args = rw_ctx;
@@ -34,16 +34,17 @@ static struct spdk_fs_generic_ctx* rw_context_wrapper(struct spdk_filesystem* fs
     rw_ctx->buffer = buffer;
     rw_ctx->offset = offset;
     rw_ctx->size = size;
+    rw_ctx->read = read;
     return ctx;
 }
 
 
-static void read_blob_complete(void *cb_arg, int bserrno)
+static void io_blob_complete(void *cb_arg, int bserrno)
 {
     struct spdk_fs_generic_ctx* ctx = cb_arg;
     struct spdk_fs_rw_ctx* rw_ctx = ctx->args;
     if(bserrno) {
-        SPDK_ERRLOG("Read Failed!\n");
+        SPDK_ERRLOG("IO Failed! bserrno %d, io type %s\n", bserrno, rw_ctx->read? "Read" : "Write");
         rw_ctx->status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
         *ctx->done = true;
         return;
@@ -52,21 +53,25 @@ static void read_blob_complete(void *cb_arg, int bserrno)
     rw_ctx->status = SIMPLE_OP_STATUS_SUCCCESS;
 }
 
-static void read_blob(void* context)
+static void io_blob(void* context)
 {
     struct spdk_fs_generic_ctx* ctx = context;
     struct spdk_fs_rw_ctx* rw_ctx = ctx->args;
-    spdk_blob_io_read(rw_ctx->blob, ctx->fs->bs, rw_ctx->buffer, rw_ctx->offset, 
-        rw_ctx->size, read_blob_complete, ctx);
+    if(rw_ctx->read)
+        spdk_blob_io_read(rw_ctx->blob, ctx->fs->bs, rw_ctx->buffer, rw_ctx->offset, 
+            rw_ctx->size, io_blob_complete, ctx);
+    else
+        spdk_blob_io_write(rw_ctx->blob, ctx->fs->bs, rw_ctx->buffer, rw_ctx->offset, 
+            rw_ctx->size, io_blob_complete, ctx);
 }
 
 
-bool generic_blob_read(struct spdk_filesystem *fs,struct spdk_blob* blob, size_t size, loff_t *offset, void *buffer)
+bool generic_blob_io(struct spdk_filesystem *fs,struct spdk_blob* blob, size_t size, loff_t *offset, void *buffer, bool read)
 {
     bool done = false;
-    struct spdk_fs_generic_ctx *ctx = rw_context_wrapper(fs, blob, size, offset, buffer, &done);
+    struct spdk_fs_generic_ctx *ctx = rw_context_wrapper(fs, blob, size, offset, buffer, &done, read);
     struct spdk_fs_rw_ctx* rw_ctx = ctx->args;
-    generic_poller(fs->op_thread, read_blob, ctx, &done);
+    generic_poller(fs->op_thread, io_blob, ctx, &done);
     free(ctx);
     if(rw_ctx->status) {
         free(rw_ctx);
@@ -78,6 +83,7 @@ bool generic_blob_read(struct spdk_filesystem *fs,struct spdk_blob* blob, size_t
         return false;
     }
 }
+
 
 static void resize_blob_complete(void *cb_arg, int bserrno)
 {

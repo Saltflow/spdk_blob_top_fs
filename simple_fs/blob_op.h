@@ -10,6 +10,7 @@ struct spdk_fs_rw_ctx {
 	size_t size;
 	loff_t offset;
 	void* buffer;
+	bool read;
 };
 
 bool blob_create(struct spdk_blob* );

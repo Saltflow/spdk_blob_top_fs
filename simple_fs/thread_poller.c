@@ -1,6 +1,6 @@
 #include "thread_poller.h"
 
-static const int POLLER_MAX_TIME = 1e5;
+static const int POLLER_MAX_TIME = 1e8;
 
 bool generic_poller(struct spdk_thread* thread, spdk_msg_fn fn, void *ctx, bool *done)
 {

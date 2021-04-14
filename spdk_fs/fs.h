@@ -65,8 +65,11 @@ struct spdkfs_dir {
 	struct blob *blob;
 	const struct spdk_file_operations	*d_op;
 	unsigned int d_flags;
+	struct spdkfs_file_persist_ctx *dir_persist;
 
-	TAILQ_HEAD(, spdkfs_dirent) _dirents;
+	bool initialized;
+	int dirent_count;
+	struct spdkfs_dirent *dirents;
 
 };
 

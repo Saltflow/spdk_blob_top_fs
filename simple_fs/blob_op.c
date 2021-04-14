@@ -24,7 +24,7 @@ static struct spdk_fs_generic_ctx *rw_context_wrapper(struct spdk_filesystem *fs
 
 static void alloc_blob(void *ctx)
 {
-	struct simple_fs_cb_args* args = ctx;
+	struct simple_fs_cb_args *args = ctx;
 	g_filesystem->operations->alloc_blob(g_filesystem, NULL, args);
 }
 
@@ -32,7 +32,7 @@ bool blob_create(struct spdk_blob **blob)
 {
 	enum simple_op_status status;
 	bool done;
-	struct simple_fs_cb_args args = {&done ,status, *blob, NULL};
+	struct simple_fs_cb_args args = {&done, status, *blob, NULL};
 	generic_poller(g_filesystem->op_thread, alloc_blob, &args, &done);
 }
 
@@ -55,15 +55,15 @@ static void io_blob(void *context)
 {
 	struct spdk_fs_generic_ctx *ctx = context;
 	struct spdk_fs_rw_ctx *rw_ctx = ctx->args;
-    assert(rw_ctx->blob);
-    assert(ctx->fs->bs);
-    uint64_t io_unit = spdk_bs_get_io_unit_size(ctx->fs->bs);
+	assert(rw_ctx->blob);
+	assert(ctx->fs->bs);
+	uint64_t io_unit = spdk_bs_get_io_unit_size(ctx->fs->bs);
 	if (rw_ctx->read)
-		spdk_blob_io_read(rw_ctx->blob, ctx->fs->bs, rw_ctx->buffer, rw_ctx->offset,
-				  rw_ctx->size / io_unit, io_blob_complete, ctx);
+		spdk_blob_io_read(rw_ctx->blob, ctx->fs->bs, rw_ctx->buffer, rw_ctx->offset / io_unit,
+				  (rw_ctx->size - 1) / io_unit + 1, io_blob_complete, ctx);
 	else
-		spdk_blob_io_write(rw_ctx->blob, ctx->fs->bs, rw_ctx->buffer, rw_ctx->offset,
-				   rw_ctx->size / io_unit, io_blob_complete, ctx);
+		spdk_blob_io_write(rw_ctx->blob, ctx->fs->bs, rw_ctx->buffer, rw_ctx->offset / io_unit,
+				   (rw_ctx->size - 1) / io_unit + 1, io_blob_complete, ctx);
 }
 
 
@@ -94,7 +94,7 @@ static void spdk_blob_sync_complete(void *cb_arg, int bserrno)
 		*ctx->done = true;
 		return;
 	}
-    SPDK_NOTICELOG("Resize blob success!\n");
+	SPDK_NOTICELOG("Resize blob success!\n");
 	rw_ctx->status = SIMPLE_OP_STATUS_SUCCCESS;
 	*ctx->done = true;
 }
@@ -110,16 +110,16 @@ static void resize_blob_complete(void *cb_arg, int bserrno)
 		*ctx->done = true;
 		return;
 	}
-    spdk_blob_sync_md(rw_ctx->blob, spdk_blob_sync_complete, ctx);
+	spdk_blob_sync_md(rw_ctx->blob, spdk_blob_sync_complete, ctx);
 }
 
 static void resize_blob(void *context)
 {
 	struct spdk_fs_generic_ctx *ctx = context;
 	struct spdk_fs_rw_ctx *rw_ctx = ctx->args;
-    
-    uint64_t io_unit = spdk_bs_get_io_unit_size(ctx->fs->bs);
-	spdk_blob_resize(rw_ctx->blob, rw_ctx->size / io_unit, resize_blob_complete, ctx);
+
+	uint64_t io_unit = spdk_bs_get_io_unit_size(ctx->fs->bs);
+	spdk_blob_resize(rw_ctx->blob, (rw_ctx->size - 1) / io_unit + 1, resize_blob_complete, ctx);
 }
 
 bool generic_blob_resize(struct spdk_filesystem *fs, struct spdk_blob *blob, size_t size)

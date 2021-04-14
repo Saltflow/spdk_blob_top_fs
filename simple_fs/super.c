@@ -50,16 +50,22 @@ static void spdk_init()
 
 static void load_root()
 {
+	g_filesystem->super_blob->root = malloc(sizeof(struct spdkfs_dir));
+	bind_ops(g_filesystem->super_blob->root);
+	g_filesystem->super_blob->root->d_op->spdk_open(g_filesystem->super_blob->blob,
+			g_filesystem->super_blob->root, NULL);
 	uint64_t size = spdk_blob_get_num_clusters(g_filesystem->super_blob->blob);
+	uint64_t io_unit_size = spdk_bs_get_io_unit_size(g_filesystem->bs);
+	struct spdkfs_file_persist_ctx *super_blob_persist = spdk_malloc(io_unit_size, 0, NULL,
+			SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+
+	// There is no data in the super blob before
 	if (size == 0) {
 		SPDK_ERRLOG("Size = 0!\n");
-		uint64_t io_unit_size = spdk_bs_get_io_unit_size(g_filesystem->bs);
 		META_SIZE = io_unit_size;
 		generic_blob_resize(g_filesystem, g_filesystem->super_blob->blob, io_unit_size);
-		struct spdkfs_file_persist_ctx *super_blob_persist = spdk_malloc(io_unit_size, 0, NULL,
-				SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 
-		super_blob_persist->f_size = io_unit_size;
+		super_blob_persist->f_size = 0;
 		super_blob_persist->i_mtime = time(NULL);
 		super_blob_persist->i_parent_blob_id = 0;
 		super_blob_persist->i_writecount = 1;
@@ -69,8 +75,33 @@ static void load_root()
 		SPDK_WARNLOG("Size after risize %lu\n", size);
 		generic_blob_io(g_filesystem, g_filesystem->super_blob->blob,
 				sizeof(struct spdkfs_file_persist_ctx), 0, super_blob_persist, false);
-		spdk_free(super_blob_persist);
+		g_filesystem->super_blob->root->dirent_count = 0;
+		g_filesystem->super_blob->root->dirents =  malloc(sizeof(struct spdkfs_dirent_persist_ctx) * 10);
+	} else {
+		generic_blob_io(g_filesystem, g_filesystem->super_blob->blob,
+				sizeof(struct spdkfs_file_persist_ctx), 0, super_blob_persist, true);
+		SPDK_NOTICELOG("Super blob dirent count %d\n", super_blob_persist->f_size);
+		if (super_blob_persist->f_size != 0) {
+			char *buffer = spdk_malloc(super_blob_persist->f_size, io_unit_size, NULL, SPDK_ENV_SOCKET_ID_ANY,
+						   SPDK_MALLOC_SHARE);
+
+			generic_blob_io(g_filesystem, g_filesystem->super_blob->blob,
+					sizeof(struct spdkfs_file_persist_ctx), io_unit_size, buffer, true);
+
+			int dirent_num = super_blob_persist->f_size / sizeof(struct spdkfs_dirent_persist_ctx);
+			g_filesystem->super_blob->root->dirents = malloc(super_blob_persist->f_size * 2);
+
+			for (int i = 0; i < dirent_num; ++i) {
+				struct spdkfs_dirent *new_dir = malloc(sizeof(struct spdkfs_dirent));
+				new_dir->_parent = g_filesystem->super_blob->root;
+				memcpy(&new_dir->d_ctx, buffer + i * sizeof(struct spdkfs_dirent_persist_ctx),
+				       sizeof(struct spdkfs_dirent_persist_ctx));
+			}
+			spdk_free(buffer);
+			g_filesystem->super_blob->root->dirent_count = dirent_num;
+		}
 	}
+	g_filesystem->super_blob->root->initialized = true;
 }
 
 void load_simple_spdk_fs()

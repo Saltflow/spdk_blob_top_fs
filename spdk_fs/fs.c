@@ -4,6 +4,7 @@ struct bs_load_context {
 	struct spdk_filesystem *fs;
 	bool is_loading;
 	struct spdk_bs_bdev *bdev;
+	spdk_blob_id super_blob_id;
 	bool *done;
 };
 static void
@@ -51,6 +52,7 @@ static void spdk_bs_set_super_complete(void *cb_arg, int bserrno)
 		*ctx->done = true;
 		return;
 	}
+	spdk_bs_open_blob(ctx->fs->bs, ctx->super_blob_id, spdk_bs_sb_open_complete, ctx);
 }
 
 static void spdk_bs_create_super_complete(void *cb_arg, spdk_blob_id blobid, int bserrno)
@@ -62,7 +64,7 @@ static void spdk_bs_create_super_complete(void *cb_arg, spdk_blob_id blobid, int
 		return;
 	} else {
 		SPDK_WARNLOG("Blobid %lu\n", blobid);
-
+		ctx->super_blob_id = blobid;
 		spdk_bs_set_super(ctx->fs->bs, blobid, spdk_bs_set_super_complete, ctx);
 	}
 }
@@ -88,13 +90,11 @@ static void spdk_init_super_block_cb(void *cb_arg, struct spdk_blob_store *bs,
 			SPDK_ERRLOG("Error allocating io channel!\n");
 		}
 		if (ctx->is_loading) {
-			SPDK_NOTICELOG("Super block successfully loaded\n");
-			spdk_bs_get_super(ctx->fs->bs, spdk_bs_get_super_complete, ctx);
+			SPDK_NOTICELOG("Blobstore successfully loaded\n");
 		} else {
-			SPDK_NOTICELOG("Super block successfully initialized\n");
-			// spdk_bs_get_super(ctx->fs->bs, spdk_bs_get_super_complete, ctx);
-			// spdk_bs_get_super(ctx->fs->bs, spdk_bs_get_super_complete, ctx);
+			SPDK_NOTICELOG("Blobstore successfully initialized\n");
 		}
+		spdk_bs_get_super(ctx->fs->bs, spdk_bs_get_super_complete, ctx);
 	}
 }
 

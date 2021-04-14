@@ -49,5 +49,7 @@ void simple_dir_create(struct spdk_blob *blob, struct spdkfs_file *dir, void *ct
 	struct file_op_cb_args *cb_args = ctx;
 	dir->_blob = blob;
 	dir->fs = cb_args->fs;
-    if(spdk_blob_get_id(dir->_blob)
+	if (spdk_blob_get_id(dir->_blob) == spdk_blob_get_id(cb_args->fs->super_blob->blob)) {
+		return;
+	}
 }

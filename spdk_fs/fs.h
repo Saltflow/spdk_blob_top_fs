@@ -17,7 +17,7 @@
 
 struct spdk_super_blob {
 	struct spdkfs_dir *root;
-	struct spdk_blob* blob;
+	struct spdk_blob *blob;
 };
 
 struct spdk_filesystem {
@@ -42,6 +42,8 @@ struct spdkfs_file_persist_ctx {
 	long	i_ctime;
 	size_t f_size;
 	unsigned int	i_writecount;
+	uint64_t i_parent_blob_id;
+	bool i_is_dir;
 } __attribute__((aligned(4)));
 
 struct spdkfs_file {

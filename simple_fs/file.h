@@ -17,7 +17,6 @@ enum simple_op_status {
 };
 
 struct file_op_cb_args {
-	bool *done;
 	struct spdk_filesystem *fs;
 	enum simple_op_status status;
 };

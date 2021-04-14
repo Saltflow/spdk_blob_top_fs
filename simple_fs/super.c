@@ -2,17 +2,14 @@
 #include "file.h"
 #include "spdk/env.h"
 #include "thread_poller.h"
+#include "blob_op.h"
 
 struct spdk_filesystem *g_filesystem;
 struct spdk_thread *g_spdkfs_thread;
+static int META_SIZE = 0;
 
 
-struct spdk_filesystem* get_fs_instance()
-{
-	return g_filesystem;
-}
-
-static const char* JSON_CONFIG_FILE = "/usr/local/etc/spdk/rocksdb.json";
+static const char *JSON_CONFIG_FILE = "/usr/local/etc/spdk/rocksdb.json";
 __attribute__((constructor)) void load_simple_spdk_fs();
 __attribute__((destructor)) void unload_simple_spdk_fs();
 
@@ -20,45 +17,50 @@ static void load_fs_operations();
 
 static void spdk_app_json_load_done(int rc, void *arg1)
 {
-	if(rc) 
-	{
+	if (rc) {
 		SPDK_ERRLOG("Something wrong with spdk app json!\n");
 	}
-	bool* done = (bool*)arg1;
+	bool *done = (bool *)arg1;
 	*done = true;
 }
 
-static void bootstrap_fn(void* ctx) 
+static void bootstrap_fn(void *ctx)
 {
 	spdk_app_json_config_load(JSON_CONFIG_FILE, SPDK_DEFAULT_RPC_ADDR, spdk_app_json_load_done,
-				ctx, true);
+				  ctx, true);
 }
 
 static void spdk_init()
 {
 	struct spdk_env_opts opts;
 	spdk_env_opts_init(&opts);
-	if (spdk_env_init(&opts) < 0)
-	{
+	if (spdk_env_init(&opts) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
 		exit(1);
 	}
 	spdk_thread_lib_init(NULL, 0);
 	struct spdk_thread *spdk_init_thread = spdk_thread_create("init_thread", NULL);
 	bool done = false;
-	generic_poller(spdk_init_thread ,bootstrap_fn, &done, &done);
-	if(!spdk_bdev_first()) {
-        SPDK_ERRLOG("No bdev found, exit\n");
-        exit(-1);
-    }
+	generic_poller(spdk_init_thread, bootstrap_fn, &done, &done);
+	if (!spdk_bdev_first()) {
+		SPDK_ERRLOG("No bdev found, exit\n");
+		exit(-1);
+	}
 }
 
 static void load_root()
 {
 	uint64_t size = spdk_blob_get_num_clusters(g_filesystem->super_blob->blob);
-	SPDK_WARNLOG("%d\n", size);
-	if(size == 0) {
+	if (size == 0) {
 		SPDK_ERRLOG("Size = 0!\n");
+		uint64_t io_unit_size = spdk_bs_get_io_unit_size(g_filesystem->bs);
+		META_SIZE = io_unit_size;
+		generic_blob_resize(g_filesystem, g_filesystem->super_blob->blob, io_unit_size);
+		struct spdkfs_file_persist_ctx *super_blob_persist = spdk_malloc(io_unit_size, 0, NULL,
+				SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+		generic_blob_io(g_filesystem, g_filesystem->super_blob->blob,
+				sizeof(struct spdkfs_file_persist_ctx), 0, super_blob_persist, write);
+		spdk_free(super_blob_persist);
 	}
 }
 
@@ -78,7 +80,7 @@ void load_simple_spdk_fs()
 }
 
 void simple_fs_alloc_blob(struct spdk_filesystem *fs, spdk_fs_callback cb_fn,
-			   void *cb_args);
+			  void *cb_args);
 void simple_fs_destroy_blob(struct spdk_blob *, spdk_fs_callback cb_fn, void *cb_args);
 void simple_fs_free_blob(struct spdk_blob *, spdk_fs_callback cb_fn, void *cb_args);
 
@@ -127,7 +129,7 @@ static void create_blob_finished(void *cb_arg, spdk_blob_id blobid, int bserrno)
 }
 
 void simple_fs_alloc_blob(struct spdk_filesystem *fs, spdk_fs_callback cb_fn,
-			   void *cb_args)
+			  void *cb_args)
 {
 
 	struct simple_fs_cb_args *args = cb_args;
@@ -172,32 +174,31 @@ void simple_fs_free_blob(struct spdk_blob *blob, spdk_fs_callback cb_fn, void *c
 
 static void unload_complete_cb(void *cb_arg, int bserrno)
 {
-	if(bserrno)
-	{
+	if (bserrno) {
 		SPDK_ERRLOG("Unload blobstore failed!\n");
 	}
-	bool* done = cb_arg;
+	bool *done = cb_arg;
 	*done = true;
 }
 
-static void unload_superblob_fn(void* ctx)
+static void unload_superblob_fn(void *ctx)
 {
 	spdk_blob_close(g_filesystem->super_blob->blob, unload_complete_cb, ctx);
 }
 
-static void unload_bs_fn(void* ctx)
+static void unload_bs_fn(void *ctx)
 {
 	spdk_bs_free_io_channel(g_filesystem->io_channel);
 	spdk_bs_unload(g_filesystem->bs, unload_complete_cb, ctx);
 }
 
-static void stop_subsystem_complete_cb(void* ctx)
+static void stop_subsystem_complete_cb(void *ctx)
 {
-	bool* done = ctx;
+	bool *done = ctx;
 	*done = true;
 }
 
-static void stop_subsystem(void* ctx)
+static void stop_subsystem(void *ctx)
 {
 	spdk_subsystem_fini(stop_subsystem_complete_cb, ctx);
 }

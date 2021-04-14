@@ -5,6 +5,8 @@
 
 	load_simple_spdk_fs;
 	generic_poller;
+	generic_blob_io;
+	generic_blob_resize;
 	open;
 	close;
 	read;

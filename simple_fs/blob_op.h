@@ -5,18 +5,19 @@
 #include "file.h"
 
 struct spdk_fs_rw_ctx {
-	struct spdk_blob* blob;
-    enum simple_op_status status;
+	struct spdk_blob *blob;
+	enum simple_op_status status;
 	size_t size;
 	loff_t offset;
-	void* buffer;
+	void *buffer;
 	bool read;
 };
 
-bool blob_create(struct spdk_blob* );
+bool blob_create(struct spdk_blob *);
 
-bool generic_blob_read(struct spdk_filesystem *fs, struct spdk_blob* blob, size_t size , loff_t *offset, void *buffer);
+bool generic_blob_io(struct spdk_filesystem *fs, struct spdk_blob *blob, size_t size,
+		     loff_t *offset, void *buffer, bool read);
 
-bool generic_blob_resize(struct spdk_filesystem *fs, struct spdk_blob* blob, size_t size);
+bool generic_blob_resize(struct spdk_filesystem *fs, struct spdk_blob *blob, size_t size);
 
 #endif

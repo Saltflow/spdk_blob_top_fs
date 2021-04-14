@@ -58,8 +58,17 @@ static void load_root()
 		generic_blob_resize(g_filesystem, g_filesystem->super_blob->blob, io_unit_size);
 		struct spdkfs_file_persist_ctx *super_blob_persist = spdk_malloc(io_unit_size, 0, NULL,
 				SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+
+		super_blob_persist->f_size = io_unit_size;
+		super_blob_persist->i_mtime = time(NULL);
+		super_blob_persist->i_parent_blob_id = 0;
+		super_blob_persist->i_writecount = 1;
+		super_blob_persist->i_is_dir = true;
+
+		size = spdk_blob_get_num_clusters(g_filesystem->super_blob->blob);
+		SPDK_WARNLOG("Size after risize %lu\n", size);
 		generic_blob_io(g_filesystem, g_filesystem->super_blob->blob,
-				sizeof(struct spdkfs_file_persist_ctx), 0, super_blob_persist, write);
+				sizeof(struct spdkfs_file_persist_ctx), 0, super_blob_persist, false);
 		spdk_free(super_blob_persist);
 	}
 }

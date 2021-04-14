@@ -13,7 +13,7 @@ struct spdk_fs_rw_ctx {
 	bool read;
 };
 
-bool blob_create(struct spdk_blob *);
+bool blob_create(struct spdk_blob **blob);
 
 bool generic_blob_io(struct spdk_filesystem *fs, struct spdk_blob *blob, size_t size,
 		     loff_t *offset, void *buffer, bool read);

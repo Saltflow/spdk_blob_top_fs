@@ -1,6 +1,7 @@
 #include "interface.h"
 
 static struct fdtable g_spdk_fdtable;
+extern struct spdk_filesystem *g_filesystem;
 
 static bool spdk_ptop_blobfile(const char *__file)
 {
@@ -30,6 +31,7 @@ int __spdk__open(const char *__file, int __oflag, ...)
 			SPDK_ERRLOG("FD table already full!\n");
 			return -1;
 		}
+
 	}
 
 }

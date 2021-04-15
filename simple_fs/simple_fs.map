@@ -12,6 +12,7 @@
 	read;
 	write;
 	lseek;
+	malloc;
 
 	local: *;
 };

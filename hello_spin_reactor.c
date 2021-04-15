@@ -87,5 +87,20 @@ int
 main(int argc, char **argv)
 {
 	SPDK_WARNLOG("Preload finished, entering user program...\n");
-	write(STDOUT_FILENO, "Hello, write!", 20);
+	char* buffer = malloc(8192);
+	int spdk_fd =  open("spdk:hello", O_CREAT);
+	memset(buffer, "0xaa", 8192);
+	write(spdk_fd, buffer, 8192);
+	buffer[11] = '\0';
+	printf("%s\n",buffer);
+	
+	memset(buffer, "0xab", 8192);
+	
+	buffer[12] = '\0';
+	printf("%s\n", buffer);
+	read(spdk_fd, buffer, 8192);
+	
+	buffer[12] = '\0';
+	printf("%s\n", buffer);
+
 }

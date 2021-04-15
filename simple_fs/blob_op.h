@@ -15,6 +15,10 @@ struct spdk_fs_rw_ctx {
 
 bool blob_create(struct spdk_blob **blob);
 
+bool blob_open(struct spdk_blob **blob, spdk_blob_id blob_id);
+
+bool blob_close(struct spdk_blob *blob);
+
 bool generic_blob_io(struct spdk_filesystem *fs, struct spdk_blob *blob, size_t size,
 		     loff_t *offset, void *buffer, bool read);
 

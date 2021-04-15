@@ -51,7 +51,7 @@ static void spdk_init()
 static void load_root()
 {
 	g_filesystem->super_blob->root = malloc(sizeof(struct spdkfs_dir));
-	bind_ops(g_filesystem->super_blob->root);
+	bind_dir_ops(g_filesystem->super_blob->root);
 	g_filesystem->super_blob->root->d_op->spdk_open(g_filesystem->super_blob->blob,
 			g_filesystem->super_blob->root, NULL);
 	uint64_t size = spdk_blob_get_num_clusters(g_filesystem->super_blob->blob);
@@ -59,8 +59,8 @@ static void load_root()
 	struct spdkfs_file_persist_ctx *super_blob_persist = spdk_malloc(io_unit_size, 0, NULL,
 			SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 
-	// There is no data in the super blob before
-	if (size == 0) {
+	// FIX ME : Dummy implementation in reading real data
+	if (size == 0) { // There is no data in the super blob before
 		SPDK_ERRLOG("Size = 0!\n");
 		META_SIZE = io_unit_size;
 		generic_blob_resize(g_filesystem, g_filesystem->super_blob->blob, io_unit_size);
@@ -101,6 +101,7 @@ static void load_root()
 			g_filesystem->super_blob->root->dirent_count = dirent_num;
 		}
 	}
+
 	g_filesystem->super_blob->root->initialized = true;
 }
 

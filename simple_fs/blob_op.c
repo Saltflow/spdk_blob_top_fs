@@ -32,8 +32,77 @@ bool blob_create(struct spdk_blob **blob)
 {
 	enum simple_op_status status;
 	bool done;
-	struct simple_fs_cb_args args = {&done, status, *blob, NULL};
+	struct simple_fs_cb_args args = {&done, status, *blob, NULL, NULL};
 	generic_poller(g_filesystem->op_thread, alloc_blob, &args, &done);
+	if(args.status == SIMPLE_OP_STATUS_SUCCCESS)
+		return true;
+	else
+		return false;
+}
+
+static void open_blob_complete(void *cb_arg, struct spdk_blob *blb, int bserrno)
+{
+	struct simple_fs_cb_args *args = cb_arg;
+	if(bserrno)
+	{
+		SPDK_ERRLOG("Something wrong when open the blob! bserrno = %d\n", bserrno);
+		args->status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
+		args->done = true;
+		return;
+	}
+	args->op_blob = blb;
+	args->status = SIMPLE_OP_STATUS_SUCCCESS;
+	args->done = true;
+}
+
+static void open_blob(void* ctx)
+{
+	struct simple_fs_cb_args *args = ctx;
+	spdk_bs_open_blob(g_filesystem->bs, args->blob_id, open_blob_complete, ctx);
+}
+
+bool blob_open(struct spdk_blob **blob, spdk_blob_id blob_id)
+{
+	enum simple_op_status status;
+	bool done;
+	struct simple_fs_cb_args args = {&done, status, *blob, NULL, NULL};
+	generic_poller(g_filesystem->op_thread, open_blob, &args, &done);
+	if(args.status == SIMPLE_OP_STATUS_SUCCCESS)
+		return true;
+	else
+		return false;
+}
+
+static void close_blob_complete(void *cb_arg, int bserrno)
+{
+	struct simple_fs_cb_args *args = cb_arg;
+	if(bserrno)
+	{
+		SPDK_ERRLOG("Something wrong when closing the blob! bserrno = %d\n", bserrno);
+		args->status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
+		args->done = true;
+		return;
+	}
+	args->status = SIMPLE_OP_STATUS_SUCCCESS;
+	args->done = true;
+}
+
+static void close_blob(void* ctx)
+{
+	struct simple_fs_cb_args *args = ctx;
+	spdk_blob_close(args->op_blob, close_blob_complete, ctx);
+}
+
+bool blob_close(struct spdk_blob *blob)
+{
+	enum simple_op_status status;
+	bool done;
+	struct simple_fs_cb_args args = {&done, status, blob, NULL, NULL};
+	generic_poller(g_filesystem->op_thread, close_blob, &args, &done);
+	if(args.status == SIMPLE_OP_STATUS_SUCCCESS)
+		return true;
+	else
+		return false;
 }
 
 
@@ -59,10 +128,10 @@ static void io_blob(void *context)
 	assert(ctx->fs->bs);
 	uint64_t io_unit = spdk_bs_get_io_unit_size(ctx->fs->bs);
 	if (rw_ctx->read)
-		spdk_blob_io_read(rw_ctx->blob, ctx->fs->bs, rw_ctx->buffer, rw_ctx->offset / io_unit,
+		spdk_blob_io_read(rw_ctx->blob, ctx->fs->io_channel, rw_ctx->buffer, rw_ctx->offset / io_unit,
 				  (rw_ctx->size - 1) / io_unit + 1, io_blob_complete, ctx);
 	else
-		spdk_blob_io_write(rw_ctx->blob, ctx->fs->bs, rw_ctx->buffer, rw_ctx->offset / io_unit,
+		spdk_blob_io_write(rw_ctx->blob,  ctx->fs->io_channel, rw_ctx->buffer, rw_ctx->offset / io_unit,
 				   (rw_ctx->size - 1) / io_unit + 1, io_blob_complete, ctx);
 }
 
@@ -118,10 +187,10 @@ static void resize_blob(void *context)
 	struct spdk_fs_generic_ctx *ctx = context;
 	struct spdk_fs_rw_ctx *rw_ctx = ctx->args;
 
-	uint64_t io_unit = spdk_bs_get_io_unit_size(ctx->fs->bs);
-	spdk_blob_resize(rw_ctx->blob, (rw_ctx->size - 1) / io_unit + 1, resize_blob_complete, ctx);
+	uint64_t resize_unit = spdk_bs_get_cluster_size(ctx->fs->bs);
+	spdk_blob_resize(rw_ctx->blob, (rw_ctx->size - 1) / resize_unit + 1, resize_blob_complete, ctx);
 }
-
+// NOTE: resize are based on cluster ,not io_unit
 bool generic_blob_resize(struct spdk_filesystem *fs, struct spdk_blob *blob, size_t size)
 {
 	bool done = false;

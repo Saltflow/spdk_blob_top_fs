@@ -27,23 +27,6 @@ static void spdk_bs_sb_open_complete(void *cb_arg, struct spdk_blob *blb, int bs
 	*ctx->done = true;
 }
 
-static void spdk_bs_create_super_complete(void *cb_arg, spdk_blob_id blobid, int bserrno);
-static void spdk_bs_set_super_complete(void *cb_arg, int bserrno);
-
-static void spdk_bs_get_super_complete(void *cb_arg, spdk_blob_id blobid, int bserrno)
-{
-
-	struct bs_load_context *ctx = cb_arg;
-	if (bserrno) {
-		SPDK_ERRLOG("Super blob get failed, bserrno %d\n", bserrno);
-		if (bserrno == -ENOENT) {
-			spdk_bs_create_blob(ctx->fs->bs, spdk_bs_create_super_complete, ctx);
-		}
-	} else {
-		spdk_bs_open_blob(ctx->fs->bs, blobid, spdk_bs_sb_open_complete, ctx);
-	}
-}
-
 static void spdk_bs_set_super_complete(void *cb_arg, int bserrno)
 {
 	struct bs_load_context *ctx = cb_arg;
@@ -66,6 +49,20 @@ static void spdk_bs_create_super_complete(void *cb_arg, spdk_blob_id blobid, int
 		SPDK_WARNLOG("Blobid %lu\n", blobid);
 		ctx->super_blob_id = blobid;
 		spdk_bs_set_super(ctx->fs->bs, blobid, spdk_bs_set_super_complete, ctx);
+	}
+}
+
+static void spdk_bs_get_super_complete(void *cb_arg, spdk_blob_id blobid, int bserrno)
+{
+
+	struct bs_load_context *ctx = cb_arg;
+	if (bserrno) {
+		SPDK_ERRLOG("Super blob get failed, bserrno %d\n", bserrno);
+		if (bserrno == -ENOENT) {
+			spdk_bs_create_blob(ctx->fs->bs, spdk_bs_create_super_complete, ctx);
+		}
+	} else {
+		spdk_bs_open_blob(ctx->fs->bs, blobid, spdk_bs_sb_open_complete, ctx);
 	}
 }
 

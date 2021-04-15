@@ -25,6 +25,7 @@ struct simple_fs_cb_args {
 	bool *done;
 	enum simple_op_status status;
 	struct spdk_blob *op_blob;
+	spdk_blob_id blob_id;
 	spdk_fs_callback cb_fn;
 };
 
@@ -47,5 +48,7 @@ void simple_dir_write(struct spdkfs_file *, size_t, loff_t *, void *);
 void simple_dir_open(struct spdk_blob *, struct spdkfs_file *, void *);
 void simple_dir_create(struct spdk_blob *, struct spdkfs_file *, void *);
 
-void bind_ops(struct spdkfs_dir *);
+void bind_dir_ops(struct spdkfs_dir *);
+
+void bind_file_ops(struct spdkfs_file *file);
 # endif

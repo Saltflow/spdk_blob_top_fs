@@ -3,7 +3,7 @@
 #include "thread_poller.h"
 #include "blob_op.h"
 
-static const struct spdk_file_operations simple_fille_ops = {
+static const struct spdk_file_operations simplefs_file_ops = {
 	.spdk_lseek = simple_fs_lseek,
 	.spdk_read = simple_fs_read,
 	.spdk_write = simple_fs_write,
@@ -12,7 +12,7 @@ static const struct spdk_file_operations simple_fille_ops = {
 	.spdk_release = simple_fs_release,
 };
 
-static const struct spdk_file_operations simple_dir_ops = {
+static const struct spdk_file_operations simplefs_dir_ops = {
 	.spdk_read = simple_dir_read,
 	.spdk_write = simple_dir_write,
 	.spdk_open = simple_dir_open,
@@ -49,9 +49,14 @@ void simple_fs_release(struct spdk_blob *blob, struct spdkfs_file *file, void *c
 }
 
 
-void bind_ops(struct spdkfs_dir *dir)
+void bind_dir_ops(struct spdkfs_dir *dir)
 {
-	dir->d_op = &simple_dir_ops;
+	dir->d_op = &simplefs_dir_ops;
+}
+
+void bind_file_ops(struct spdkfs_file *file)
+{
+	file->f_op = &simplefs_file_ops;
 }
 
 
@@ -60,7 +65,12 @@ void simple_dir_read(struct spdkfs_file *dir, size_t size, loff_t *buffer, void 
 	struct spdkfs_dir *open_dir = dir;
 
 }
-void simple_dir_write(struct spdkfs_file *dir, size_t size, loff_t *buffer, void *ctx);
+// Always append to the bottom
+void simple_dir_write(struct spdkfs_file *dir, size_t size, loff_t *buffer, void *ctx)
+{
+	struct spdkfs_dir *open_dir = dir;
+
+}
 
 void simple_dir_open(struct spdk_blob *blob, struct spdkfs_file *dir, void *ctx)
 {
@@ -82,22 +92,26 @@ void simple_dir_create(struct spdk_blob *blob, struct spdkfs_file *dir, void *ct
 	}
 }
 
-struct spdkfs_file *find_file(const char *__file, struct spdkfs_dir *dir)
-{
-	if (dir->dirent_count == 0) {
-		return true;
-	}
-	for (int i = 0; i < dir->dirent_count; ++i) {
-
-	}
-}
-
 
 struct spdkfs_file *spdkfs_create(const char *__file, struct spdkfs_dir *dir)
 {
-	struct spdkfs_file *new_file;
+	assert(dir->initialized);
+	struct spdkfs_file *new_file = malloc(sizeof(struct spdkfs_file));
 	// Find if there exist an identical file
 	// If there exists, return the file
-	// Otherwise, allocate a blob , then fill it with file meta.
+	// Otherwise, allocate a blob , then sync the blob in the directory
+	bind_file_ops(new_file);
+	if (dir->dirent_count == 0) {
+		blob_create(&new_file->_blob);
+		dir->dirent_count++;
+		struct spdkfs_dirent* new_dir = spdk_malloc(sizeof(struct spdkfs_dirent), 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+		dir->d_op->spdk_write(dir, sizeof(struct spdkfs_dirent), new_dir, NULL);
+	}
+	for (int i = 0; i < dir->dirent_count; ++i) {
+		if(!strcmp(__file, dir->dirents[i].d_ctx._name))
+		{
+			return NULL;
+		}
+	}
 
 }

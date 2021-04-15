@@ -38,6 +38,8 @@ SO_VER := 3
 SO_MINOR := 1
 
 C_SRCS = file.c super.c thread_poller.c interface.c blob_op.c
+
+SPDK_LIB_LIST +=  spdk_fs_top
 LIBNAME = spdk_simple_fs
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/simple_fs.map)

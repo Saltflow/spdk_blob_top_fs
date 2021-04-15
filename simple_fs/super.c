@@ -107,6 +107,7 @@ static void load_root()
 
 void load_simple_spdk_fs()
 {
+	initialize_interface();
 	spdk_init();
 	g_spdkfs_thread =  spdk_thread_create("spdkfs_thread", NULL);
 	spdk_set_thread(g_spdkfs_thread);

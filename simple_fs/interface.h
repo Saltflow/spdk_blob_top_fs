@@ -3,6 +3,7 @@
 #include <sys/syscall.h>
 #include "spdk/bdev.h"
 
+int open64(const char *path, int oflag, ...) __attribute__((weak, alias("__spdk__open")));
 int open(const char *path, int oflag, ...) __attribute__((weak, alias("__spdk__open")));
 
 int close(int __fd) __attribute__((weak, alias("__spdk__close")));
@@ -15,6 +16,8 @@ ssize_t write(int __fd, const void *__buf, size_t __nbytes)__attribute__((weak,
 __off_t lseek(int __fd, __off_t __offset, int __whence) __attribute__((weak,
 		alias("__spdk_lseek")));
 
-void *malloc (size_t __size) __attribute__((weak, alias("__spdk__malloc")));
+int stat(const char *__restrict__ __file, struct stat *__restrict__ __buf) __attribute__((weak, alias("__spdk_stat")));
+
+// void *malloc (size_t __size) __attribute__((weak, alias("__spdk__malloc")));
  
 void initialize_interface();

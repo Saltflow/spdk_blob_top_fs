@@ -3,11 +3,11 @@
 #include "spdk/env.h"
 #include "thread_poller.h"
 #include "blob_op.h"
-
-struct spdk_filesystem *g_filesystem;
+struct spdk_filesystem *g_filesystem = NULL;
 struct spdk_thread *g_spdkfs_thread;
 static int META_SIZE = 0;
 
+extern void initialize_interface();
 
 static const char *JSON_CONFIG_FILE = "/usr/local/etc/spdk/rocksdb.json";
 __attribute__((constructor)) void load_simple_spdk_fs();

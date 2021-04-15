@@ -32,8 +32,9 @@ bool blob_create(struct spdk_blob **blob)
 {
 	enum simple_op_status status;
 	bool done;
-	struct simple_fs_cb_args args = {&done, status, *blob, NULL, NULL};
+	struct simple_fs_cb_args args = {&done, status, blob, NULL, NULL};
 	generic_poller(g_filesystem->op_thread, alloc_blob, &args, &done);
+	*blob = args.op_blob;
 	if(args.status == SIMPLE_OP_STATUS_SUCCCESS)
 		return true;
 	else

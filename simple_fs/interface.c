@@ -104,13 +104,13 @@ ssize_t __spdk_write(int __fd, const void *__buf, size_t __nbytes)
 	}
 	size_t io_unit =  spdk_bs_get_io_unit_size(g_filesystem->bs);
 	size_t io_size = ((__nbytes- 1) / io_unit + 1) * io_unit;
+	
+	memcpy(general_buffer, __buf, io_size);
 	generic_blob_io(g_filesystem, test_blob, __nbytes, blob_offset, general_buffer, false);
-	memcpy(__buf, general_buffer, io_size);
 	return io_size;
 }
 __off_t __spdk_lseek(int __fd, __off_t __offset, int __whence)
 {
-	printf("overiding lseek!!!\n");
 	if(__fd < TESTFD)
 		return syscall(SYS_lseek, __fd, __offset, __whence);
 	if(__whence | SEEK_SET)
@@ -119,7 +119,7 @@ __off_t __spdk_lseek(int __fd, __off_t __offset, int __whence)
 		blob_offset += __offset;
 	return blob_offset;
 }
-
+ 
 int __spdk_stat(const char *__restrict__ __file, struct stat *__restrict__ __buf)
 {
 	struct stat* file_stat= malloc(sizeof(struct stat));

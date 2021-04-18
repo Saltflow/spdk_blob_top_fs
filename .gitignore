@@ -4,3 +4,4 @@ hello_src
 *.o
 *.so.*
 *.so
+*.a

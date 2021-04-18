@@ -63,16 +63,16 @@ int __spdk__open(const char *__file, int __oflag, ...)
 			SPDK_ERRLOG("FD table already full!\n");
 			return -1;
 		}
-		general_buffer =  spdk_malloc(32768, 4096, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+		general_buffer =  spdk_malloc(2098176, 4096, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 		blob_create(&test_blob);
 		SPDK_WARNLOG("blob id %lu\n", spdk_blob_get_id(test_blob));
-		generic_blob_resize(g_filesystem, test_blob, 10* 4096);
+		generic_blob_resize(g_filesystem, test_blob, 4096* 4096);
 		return TESTFD + 10;
 	}
 	spdk_blob_id open_id;
 	sscanf(__file + 5, "%lu", &open_id);
 	blob_open(test_blob, open_id);
-	generic_blob_resize(g_filesystem, test_blob, 10* 4096);
+	generic_blob_resize(g_filesystem, test_blob, 4096* 4096);
 	blob_offset = 0;
 	return TESTFD + 10;
 }

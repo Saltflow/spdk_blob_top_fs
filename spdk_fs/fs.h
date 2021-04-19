@@ -28,6 +28,7 @@ struct spdk_filesystem {
 
 	struct spdk_fs_operations *operations;
 
+	TAILQ_ENTRY(spdk_blob*)	open_blob;
 };
 
 typedef void(*spdk_fs_callback)(void *cb_arg);
@@ -44,6 +45,7 @@ struct spdkfs_file_persist_ctx {
 	unsigned int	i_writecount;
 	uint64_t i_parent_blob_id;
 	bool i_is_dir;
+	bool dirty;
 } __attribute__((aligned(4)));
 
 struct spdkfs_file {

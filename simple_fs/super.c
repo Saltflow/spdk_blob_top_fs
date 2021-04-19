@@ -144,17 +144,17 @@ static void open_blob_finished(void *cb_arg, struct spdk_blob *blb, int bserrno)
 {
 	struct simple_fs_cb_args *args = cb_arg;
 	if (bserrno) {
-		args->status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
+		args->_op.status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
 		SPDK_ERRLOG("Open blob failed!\n");
-		*args->done = true;
+		*args->_op.done = true;
 		return;
 	}
 	args->op_blob = blb;
-	args->status = SIMPLE_OP_STATUS_SUCCCESS;
+	args->_op.status = SIMPLE_OP_STATUS_SUCCCESS;
 	if (args->cb_fn) {
 		args->cb_fn(cb_arg);
 	}
-	*args->done = true;
+	*args->_op.done = true;
 	return;
 }
 
@@ -162,9 +162,9 @@ static void create_blob_finished(void *cb_arg, spdk_blob_id blobid, int bserrno)
 {
 	struct simple_fs_cb_args *args = cb_arg;
 	if (bserrno) {
-		args->status = SIMPLE_OP_STATUS_NO_FREE_SPACE;
+		args->_op.status = SIMPLE_OP_STATUS_NO_FREE_SPACE;
 		SPDK_ERRLOG("Create blob failed!\n");
-		*args->done = true;
+		*args->_op.done = true;
 		return;
 	}
 	spdk_bs_open_blob(g_filesystem->bs, blobid, open_blob_finished, cb_arg);
@@ -183,10 +183,10 @@ static void delete_blob_finished(void *cb_arg, int bserrno)
 {
 	struct simple_fs_cb_args *args = cb_arg;
 	if (bserrno) {
-		args->status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
+		args->_op.status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
 		SPDK_ERRLOG("Delete blob failed!\n");
 	}
-	*args->done = true;
+	*args->_op.done = true;
 	return;
 }
 
@@ -199,10 +199,10 @@ static void close_blob_finished(void *cb_arg, int bserrno)
 {
 	struct simple_fs_cb_args *args = cb_arg;
 	if (bserrno) {
-		args->status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
+		args->_op.status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
 		SPDK_ERRLOG("Close blob failed!\n");
 	}
-	*args->done = true;
+	*args->_op.done = true;
 	return;
 }
 

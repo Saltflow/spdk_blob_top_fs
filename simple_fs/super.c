@@ -69,7 +69,6 @@ static void load_root()
 		super_blob_persist->i_mtime = time(NULL);
 		super_blob_persist->i_parent_blob_id = 0;
 		super_blob_persist->i_writecount = 1;
-		super_blob_persist->i_is_dir = true;
 
 		size = spdk_blob_get_num_clusters(g_filesystem->super_blob->blob);
 		SPDK_WARNLOG("Size after risize %lu\n", size);

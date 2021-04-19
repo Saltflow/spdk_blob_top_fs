@@ -37,14 +37,12 @@ typedef void(*spdk_fs_callback)(void *cb_arg);
 struct spdkfs_file_persist_ctx {
 	unsigned int	i_uid;
 	unsigned int	i_gid;
-	dev_t			i_rdev;
 	long	i_atime;
 	long	i_mtime;
 	long	i_ctime;
 	size_t f_size;
 	unsigned int	i_writecount;
 	uint64_t i_parent_blob_id;
-	bool i_is_dir;
 	bool dirty;
 } __attribute__((aligned(4)));
 
@@ -63,11 +61,24 @@ struct fdtable {
 	struct spdkfs_file *open_files[SPDK_MAX_FILE_CNT];
 };
 
+
+struct spdkfs_dir_persist_ctx {
+	unsigned int	i_uid;
+	unsigned int	i_gid;
+	long	i_atime;
+	long	i_mtime;
+	long	i_ctime;
+	size_t d_size;
+	unsigned int	i_writecount;
+	uint64_t i_parent_blob_id;
+	bool dirty;
+} __attribute__((aligned(4)));
+
 struct spdkfs_dir {
 	struct blob *blob;
 	const struct spdk_file_operations	*d_op;
 	unsigned int d_flags;
-	struct spdkfs_file_persist_ctx *dir_persist;
+	struct spdkfs_dir_persist_ctx *dir_persist;
 
 	bool initialized;
 	int dirent_count;
@@ -95,14 +106,14 @@ struct spdk_fs_operations {
 
 // All file operations should be perform at upper layer
 struct spdk_file_operations {
-	void (*spdk_lseek)(struct spdkfs_file *, loff_t, int, void *);
-	void (*spdk_read)(struct spdkfs_file *, size_t, loff_t *, void *);
-	void (*spdk_write)(struct spdkfs_file *, size_t, loff_t *, void *);
+	void (*spdk_lseek)(struct spdkfs_file *file, loff_t offset, int mode, void *);
+	void (*spdk_read)(struct spdkfs_file *file, size_t size, void* buffer, void * fs_ctx);
+	void (*spdk_write)(struct spdkfs_file *file, size_t size, void* buffer, void *fs_ctx);
 	// int (*spdk_mmap) (struct spdkfs_file *, struct vm_area_struct *);
 	unsigned long mmap_supported_flags;
-	void (*spdk_open)(struct spdk_blob *, struct spdkfs_file *, void *);
-	void (*spdk_create)(struct spdk_blob *, struct spdkfs_file *, void *);
-	void (*spdk_release)(struct spdk_blob *, struct spdkfs_file *, void *);
+	void (*spdk_open)(struct spdk_blob *blob, struct spdkfs_file *file, void *);
+	void (*spdk_create)(struct spdk_blob *blob, struct spdkfs_file *file, void *);
+	void (*spdk_release)(struct spdk_blob *blob, struct spdkfs_file *file, void *);
 };
 
 struct spdk_fs_init_ctx {

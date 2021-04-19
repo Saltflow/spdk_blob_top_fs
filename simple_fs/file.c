@@ -24,24 +24,34 @@ void simple_fs_lseek(struct spdkfs_file *file, loff_t offset, int f_flag, void *
 {
 
 }
-void simple_fs_read(struct spdkfs_file *file, size_t size, loff_t *buffer, void *cb_args)
+void simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer, void *cb_args)
 {
 
 }
-void simple_fs_write(struct spdkfs_file *file, size_t size, loff_t *buffer, void *cb_args)
+void simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer, void *cb_args)
 {
-
+	struct general_op_cb_args *args = cb_args;
 }
 void simple_fs_open(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_args)
 {
 	struct general_op_cb_args *args = cb_args;
 	file->_blob = blob;
-	file->file_persist-> f_size = spdk_blob_get_num_pages(blob) * spdk_bs_get_page_size(args->fs);
-	file->f_pos = 0;
+	struct file_persistent_ctx *file_persistent;
+	spdk_blob_get_xattr_value(blob, "file_persistent", &file_persistent, sizeof(struct spdkfs_file_persist_ctx));
+	file->file_persist = file_persistent;
+	
+	
 }
 void simple_fs_create(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_args)
 {
+	struct simple_fs_cb_args *args = cb_args;
 	file->_blob = blob;
+	file->file_persist->f_size = 0;
+	file->file_persist->i_parent_blob_id =  spdk_blob_get_id(file->_blob);
+	file->file_persist->i_writecount = 0;
+	file->file_persist->i_ctime = time(NULL);
+	spdk_blob_set_xattr(blob, "file_persistent", file->file_persist, sizeof(struct spdkfs_file_persist_ctx));
+
 }
 void simple_fs_release(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_args)
 {

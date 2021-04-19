@@ -56,7 +56,7 @@ void simple_fs_lseek(struct spdkfs_file *, loff_t, int, void *);
  * \param file_param context for file operations
 \
  */
-void simple_fs_read(struct spdkfs_file *, size_t, void*, void *);
+void simple_fs_read(struct spdkfs_file *, size_t, void *, void *);
 /**
  * Write the data to the given file
  *
@@ -67,7 +67,7 @@ void simple_fs_read(struct spdkfs_file *, size_t, void*, void *);
 \
  */
 
-void simple_fs_write(struct spdkfs_file *, size_t, void* , void *);
+void simple_fs_write(struct spdkfs_file *, size_t, void *, void *);
 /**
  * Filling the file persistent structure with the give blob
  *
@@ -88,15 +88,19 @@ void simple_fs_open(struct spdk_blob *, struct spdkfs_file *, void *);
 void simple_fs_create(struct spdk_blob *, struct spdkfs_file *, void *);
 
 /**
- * Filling the file persistent structure with the give blob
+ * Remove the file's resource
  *
  * \param blob blob to read file metadata
  * \param file file structure to fill
- * \param file_param context for file operations : operation parameters, parent dir blobid 
+ * \param file_param context for file operations : operation parameters, parent dir blobid
  *
  */
 void simple_fs_release(struct spdk_blob *, struct spdkfs_file *, void *);
 
+
+
+
+void simple_fs_close(struct spdkfs_file *file, void *);
 /**
  * Read the data from the given directory
  *

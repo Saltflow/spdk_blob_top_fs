@@ -37,17 +37,17 @@ bool blob_create(struct spdk_blob **blob)
 	*blob = args.op_blob;
 	assert(*blob);
 	SPDK_WARNLOG("blob %lu", spdk_blob_get_id(*blob));
-	if(args.status == SIMPLE_OP_STATUS_SUCCCESS)
+	if (args.status == SIMPLE_OP_STATUS_SUCCCESS) {
 		return true;
-	else
+	} else {
 		return false;
+	}
 }
 
 static void open_blob_complete(void *cb_arg, struct spdk_blob *blb, int bserrno)
 {
 	struct simple_fs_cb_args *args = cb_arg;
-	if(bserrno)
-	{
+	if (bserrno) {
 		SPDK_ERRLOG("Something wrong when open the blob! bserrno = %d\n", bserrno);
 		args->status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
 		args->done = true;
@@ -58,7 +58,7 @@ static void open_blob_complete(void *cb_arg, struct spdk_blob *blb, int bserrno)
 	args->done = true;
 }
 
-static void open_blob(void* ctx)
+static void open_blob(void *ctx)
 {
 	struct simple_fs_cb_args *args = ctx;
 	spdk_bs_open_blob(g_filesystem->bs, args->blob_id, open_blob_complete, ctx);
@@ -70,17 +70,17 @@ bool blob_open(struct spdk_blob **blob, spdk_blob_id blob_id)
 	bool done;
 	struct simple_fs_cb_args args = {&done, status, *blob, NULL, NULL};
 	generic_poller(g_filesystem->op_thread, open_blob, &args, &done);
-	if(args.status == SIMPLE_OP_STATUS_SUCCCESS)
+	if (args.status == SIMPLE_OP_STATUS_SUCCCESS) {
 		return true;
-	else
+	} else {
 		return false;
+	}
 }
 
 static void close_blob_complete(void *cb_arg, int bserrno)
 {
 	struct simple_fs_cb_args *args = cb_arg;
-	if(bserrno)
-	{
+	if (bserrno) {
 		SPDK_ERRLOG("Something wrong when closing the blob! bserrno = %d\n", bserrno);
 		args->status = SIMPLE_OP_STATUS_UNKNOWN_FAILURE;
 		args->done = true;
@@ -90,7 +90,7 @@ static void close_blob_complete(void *cb_arg, int bserrno)
 	args->done = true;
 }
 
-static void close_blob(void* ctx)
+static void close_blob(void *ctx)
 {
 	struct simple_fs_cb_args *args = ctx;
 	spdk_blob_close(args->op_blob, close_blob_complete, ctx);
@@ -102,10 +102,11 @@ bool blob_close(struct spdk_blob *blob)
 	bool done;
 	struct simple_fs_cb_args args = {&done, status, blob, NULL, NULL};
 	generic_poller(g_filesystem->op_thread, close_blob, &args, &done);
-	if(args.status == SIMPLE_OP_STATUS_SUCCCESS)
+	if (args.status == SIMPLE_OP_STATUS_SUCCCESS) {
 		return true;
-	else
+	} else {
 		return false;
+	}
 }
 
 

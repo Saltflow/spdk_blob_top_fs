@@ -13,7 +13,7 @@
 #include "spdk/string.h"
 
 #define SPDK_MAX_FILE_CNT 256
-#define SPDK_MAX_NAME_COUNT 256
+#define SPDK_MAX_NAME_COUNT 50
 
 struct spdk_super_blob {
 	struct spdkfs_dir *root;
@@ -28,7 +28,7 @@ struct spdk_filesystem {
 
 	struct spdk_fs_operations *operations;
 
-	TAILQ_ENTRY(spdk_blob*)	open_blob;
+	TAILQ_ENTRY(spdk_blob *)	open_blob;
 };
 
 typedef void(*spdk_fs_callback)(void *cb_arg);
@@ -83,17 +83,17 @@ struct spdkfs_dir {
 	bool initialized;
 	int dirent_count;
 	struct spdkfs_dirent *dirents;
+	struct spdkfs_dir_persist_ctx *dir_persists;
 
 };
 
 struct spdkfs_dirent_persist_ctx {
 	char _name[SPDK_MAX_NAME_COUNT];
-	spdk_blob_id		id;
-
+	spdk_blob_id		_id;
 } __attribute__((aligned(4)));
 
 struct spdkfs_dirent {
-	struct spdkfs_dirent_persist_ctx d_ctx;
+	struct spdkfs_dirent_persist_ctx *d_ctx;
 	struct spdk_dirent *_parent;
 	struct spdk_blob *_blob;
 };
@@ -107,11 +107,12 @@ struct spdk_fs_operations {
 // All file operations should be perform at upper layer
 struct spdk_file_operations {
 	void (*spdk_lseek)(struct spdkfs_file *file, loff_t offset, int mode, void *);
-	void (*spdk_read)(struct spdkfs_file *file, size_t size, void* buffer, void * fs_ctx);
-	void (*spdk_write)(struct spdkfs_file *file, size_t size, void* buffer, void *fs_ctx);
+	void (*spdk_read)(struct spdkfs_file *file, size_t size, void *buffer, void *fs_ctx);
+	void (*spdk_write)(struct spdkfs_file *file, size_t size, void *buffer, void *fs_ctx);
 	// int (*spdk_mmap) (struct spdkfs_file *, struct vm_area_struct *);
 	unsigned long mmap_supported_flags;
 	void (*spdk_open)(struct spdk_blob *blob, struct spdkfs_file *file, void *);
+	void (*spdk_close)(struct spdkfs_file *file, void *);
 	void (*spdk_create)(struct spdk_blob *blob, struct spdkfs_file *file, void *);
 	void (*spdk_release)(struct spdk_blob *blob, struct spdkfs_file *file, void *);
 };

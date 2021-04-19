@@ -31,5 +31,5 @@ ssize_t __spdk_write(int __fd, const void *__buf, size_t __nbytes);
 
 __off_t __spdk_lseek(int __fd, __off_t __offset, int __whence);
 
- 
+
 void initialize_interface();

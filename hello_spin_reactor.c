@@ -67,7 +67,7 @@ int spdk_get_file_size(struct thread_data *td, struct fio_file *f)
 int spdk_close_file(struct thread_data fio_unused *td, struct fio_file *f)
 {
 	__spdk__close(f->fd);
-	
+
 	f->fd = -1;
 	return 0;
 }
@@ -82,16 +82,18 @@ static int fio_spdk_syncio_prep(struct thread_data *td, struct io_u *io_u)
 
 static int fio_io_end(struct thread_data *td, struct io_u *io_u, int ret)
 {
-	if (io_u->file && ret >= 0 && ddir_rw(io_u->ddir))
+	if (io_u->file && ret >= 0 && ddir_rw(io_u->ddir)) {
 		LAST_POS(io_u->file) = io_u->offset + ret;
+	}
 
 	if (ret != (int) io_u->xfer_buflen) {
 		if (ret >= 0) {
 			io_u->resid = io_u->xfer_buflen - ret;
 			io_u->error = 0;
 			return FIO_Q_COMPLETED;
-		} else
+		} else {
 			io_u->error = errno;
+		}
 	}
 
 	if (io_u->error) {
@@ -103,22 +105,23 @@ static int fio_io_end(struct thread_data *td, struct io_u *io_u, int ret)
 }
 
 static enum fio_q_status fio_spdk_syncio_queue(struct thread_data *td,
-					  struct io_u *io_u)
+		struct io_u *io_u)
 {
 	struct fio_file *f = io_u->file;
 	int ret;
 
 	fio_ro_check(td, io_u);
 
-	if (io_u->ddir == DDIR_READ)
+	if (io_u->ddir == DDIR_READ) {
 		ret = __spdk_read(f->fd, io_u->xfer_buf, io_u->xfer_buflen);
-	else if (io_u->ddir == DDIR_WRITE)
+	} else if (io_u->ddir == DDIR_WRITE) {
 		ret = __spdk_write(f->fd, io_u->xfer_buf, io_u->xfer_buflen);
-	else if (io_u->ddir == DDIR_TRIM) {
+	} else if (io_u->ddir == DDIR_TRIM) {
 		do_io_u_trim(td, io_u);
 		return FIO_Q_COMPLETED;
-	} else
+	} else {
 		ret = 0;
+	}
 
 	return fio_io_end(td, io_u, ret);
 }

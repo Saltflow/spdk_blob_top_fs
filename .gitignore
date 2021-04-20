@@ -1,5 +1,6 @@
 hello_bdev
 hello_src
+*_ut
 *.d
 *.o
 *.so.*

@@ -97,9 +97,8 @@ struct spdkfs_dirent {
 
 
 struct spdk_fs_operations {
-	void (*alloc_blob)(struct spdk_filesystem *sb, spdk_fs_callback cb_fn, void *cb_args);
-	void (*destroy_blob)(struct spdk_blob *, spdk_fs_callback cb_fn, void *cb_args);
-	void (*free_blob)(struct spdk_blob *, spdk_fs_callback cb_fn, void *cb_args);
+	void (*alloc_blob)(struct spdk_filesystem *sb,struct fs_blob_ctx* cb_args);
+	void (*free_blob)(struct spdk_blob *,struct fs_blob_ctx* cb_args);
 };
 
 // All file operations should be perform at upper layer
@@ -128,6 +127,13 @@ struct spdk_fs_init_ctx {
 	bool *finished;
 };
 
+
+struct fs_blob_ctx {
+	bool* done;
+	int fs_errno;
+	struct spdk_blob *op_blob;
+	spdk_blob_id op_blob_id;
+};
 
 struct spdk_fs_generic_ctx {
 	struct spdk_filesystem *fs;

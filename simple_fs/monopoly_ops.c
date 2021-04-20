@@ -43,18 +43,19 @@ static void return_fd_to_table(int fd)
 static bool add_dirent(struct spdk_blob* blob ,const char *filename, struct spdkfs_dir *_dir)
 {
     int io_unit = spdk_bs_get_io_unit_size(g_filesystem);
-    if(!_dir->dir_mem_cap) {
+	_dir->dirty = true;
+    if(!_dir->dir_persist->d_size) {
         _dir->dirents = spdk_malloc(io_unit, io_unit, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
-        _dir->dir_mem_cap = io_unit;
-    } 
-    if (_dir->dir_mem_cap / io_unit <= _dir->dirent_count) {
-        _dir->dirents = spdk_realloc(_dir->dirents, _dir->dir_mem_cap + io_unit, io_unit);
-		_dir->dir_mem_cap += io_unit;
+        _dir->dir_persist->d_size = io_unit;
+    } _dir->dir_persist->d_size
+    if (_dir->dir_persist->d_size / io_unit <= _dir->dirent_count) {
+        _dir->dirents = spdk_realloc(_dir->dirents, _dir->dir_persist->d_size + io_unit, io_unit);
+		_dir->dir_persist->d_size += io_unit;
     }
-    struct spdkfs_dirent new_dirent =  _dir->dirents[_dir->dirent_count]; 
-	new_dirent._id = spdk_blob_get_id(blob);
+    struct spdkfs_dirent* new_dirent =  &_dir->dirents[_dir->dirent_count]; 
+	new_dirent->_id = spdk_blob_get_id(blob);
 	memcpy(new_dirent._name, filename, spdk_min(SPDK_MAX_NAME_COUNT, strlen(filename)));
-    _dir->dirent_count++;
+    _dir->dir_persist->d_dirent_count;
 }
 
 struct spdkfs_file *monopoly_create(const char *__file, int __oflag)

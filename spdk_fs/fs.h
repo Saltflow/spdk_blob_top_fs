@@ -71,12 +71,11 @@ struct spdkfs_dir_persist_ctx {
 	size_t d_dirent_count;
 	size_t d_size;
 	uint64_t _blob_id;
-	bool dirty;
 } __attribute__((aligned(4)));
 
 struct spdkfs_dir {
 	struct spdk_filesystem* fs;
-	struct blob *blob;
+	struct spdk_blob *blob;
 	unsigned int d_flags;
 	struct spdkfs_dir* parent;
 
@@ -85,8 +84,7 @@ struct spdkfs_dir {
 	bool initialized;
 	struct spdkfs_dir_persist_ctx *dir_persist;
 	struct spdkfs_dirent *dirents;
-	int dir_mem_cap;
-	int dirent_count;
+	bool dirty;
 
 };
 
@@ -96,10 +94,20 @@ struct spdkfs_dirent {
 } __attribute__((aligned(4)));
 
 
-struct spdk_fs_operations {
-	void (*alloc_blob)(struct spdk_filesystem *sb,struct fs_blob_ctx* cb_args);
-	void (*free_blob)(struct spdk_blob *,struct fs_blob_ctx* cb_args);
+struct fs_blob_ctx {
+	bool* done;
+	int fs_errno;
+	struct spdk_blob *op_blob;
+	spdk_blob_id op_blob_id;
 };
+
+
+
+struct spdk_fs_operations {
+	void (*alloc_blob)(struct spdk_filesystem *sb,struct fs_blob_ctx*);
+	void (*free_blob)(struct spdk_blob *,struct fs_blob_ctx*);
+};
+
 
 // All file operations should be perform at upper layer
 struct spdk_file_operations {
@@ -127,13 +135,6 @@ struct spdk_fs_init_ctx {
 	bool *finished;
 };
 
-
-struct fs_blob_ctx {
-	bool* done;
-	int fs_errno;
-	struct spdk_blob *op_blob;
-	spdk_blob_id op_blob_id;
-};
 
 struct spdk_fs_generic_ctx {
 	struct spdk_filesystem *fs;

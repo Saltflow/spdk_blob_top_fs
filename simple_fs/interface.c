@@ -60,7 +60,7 @@ int __spdk__open(const char *__file, int __oflag, ...)
 	// Create
 	if (__oflag | O_CREAT != 0) {
 		printf("create !");
-		if (g_spdk_fdtable._file_count > SPDK_MAX_FILE_CNT) {
+		if (g_fdtable._file_count > SPDK_MAX_FILE_CNT) {
 			SPDK_ERRLOG("FD table already full!\n");
 			return -1;
 		}

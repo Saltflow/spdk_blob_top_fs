@@ -4,38 +4,6 @@
 
 #include"spdkfs/fs.h"
 
-enum simple_op_status {
-	SIMPLE_OP_STATUS_SUCCCESS,
-
-	SIMPLE_OP_STATUS_NO_FREE_SPACE,
-
-	SIMPLE_OP_STATUS_INVALID_PATH,
-
-	SIMPLE_OP_STATUS_INVALID_SPACE,
-
-	SIMPLE_OP_STATUS_UNKNOWN_FAILURE,
-};
-
-struct general_op_cb_args {
-	struct spdk_filesystem *fs;
-	enum simple_op_status status;
-	bool *done;
-};
-
-struct simple_fs_cb_args {
-	struct general_op_cb_args _op;
-	struct spdk_blob *op_blob;
-	spdk_blob_id blob_id;
-	spdk_fs_callback cb_fn;
-};
-
-struct simple_fs_dir_ctx {
-	int dirent_count;
-	struct spdkfs_dirent *dirent_arr;
-	struct spdkfs_dir *parent;
-	struct general_op_cb_args _op;
-};
-
 /**
  * Modifying the given file's offset
  *
@@ -112,7 +80,7 @@ void simple_fs_close(struct spdkfs_file *file, void *);
  */
 void simple_dir_read(struct spdkfs_dir *dir);
 void simple_dir_write(struct spdkfs_dir *dir);
-void simple_dir_open(struct spdkfs_dir *dir);
+void simple_dir_close(struct spdkfs_dir *dir);
 void simple_dir_create(struct spdkfs_dir *dir);
 
 void bind_dir_ops(struct spdkfs_dir *);

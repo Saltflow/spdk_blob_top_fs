@@ -69,7 +69,7 @@ struct spdkfs_dir_persist_ctx {
 	long	i_mtime;
 	long	i_ctime;
 	size_t d_dirent_count;
-	unsigned int	i_writecount;
+	size_t d_size;
 	uint64_t _blob_id;
 	bool dirty;
 } __attribute__((aligned(4)));

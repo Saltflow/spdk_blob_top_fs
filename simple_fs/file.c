@@ -87,7 +87,7 @@ void simple_dir_read(struct spdkfs_dir *dir)
 	generic_blob_io(dir->fs, dir,
 			sizeof(struct spdkfs_file_persist_ctx), io_unit_size, buffer, true);
 
-	int dirent_num = size / sizeof(struct spdkfs_dirent);
+	int dirent_num = io_unit_size / sizeof(struct spdkfs_dirent);
 
 }
 // Always append to the bottom

@@ -52,8 +52,9 @@ static void load_root()
 {
 	g_filesystem->super_blob->root = malloc(sizeof(struct spdkfs_dir));
 	bind_dir_ops(g_filesystem->super_blob->root);
-	g_filesystem->super_blob->root->d_op->spdk_open(g_filesystem->super_blob->blob,
-			g_filesystem->super_blob->root, NULL);
+	struct spdkfs_dir* root = g_filesystem->super_blob->root;
+	root->blob = g_filesystem->super_blob->blob;
+	root->d_op->spdk_readdir(root->blob);
 	uint64_t size = spdk_blob_get_num_clusters(g_filesystem->super_blob->blob);
 	uint64_t io_unit_size = spdk_bs_get_io_unit_size(g_filesystem->bs);
 	struct spdkfs_file_persist_ctx *super_blob_persist = spdk_malloc(io_unit_size, 0, NULL,
@@ -67,7 +68,7 @@ static void load_root()
 
 		super_blob_persist->f_size = 0;
 		super_blob_persist->i_mtime = time(NULL);
-		super_blob_persist->i_parent_blob_id = 0;
+		super_blob_persist->_blob_id = 0;
 		super_blob_persist->i_writecount = 1;
 
 		size = spdk_blob_get_num_clusters(g_filesystem->super_blob->blob);

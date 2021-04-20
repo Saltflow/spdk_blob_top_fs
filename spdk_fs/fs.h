@@ -42,7 +42,7 @@ struct spdkfs_file_persist_ctx {
 	long	i_ctime;
 	size_t f_size;
 	unsigned int	i_writecount;
-	uint64_t i_parent_blob_id;
+	uint64_t _blob_id;
 	bool dirty;
 } __attribute__((aligned(4)));
 
@@ -58,45 +58,43 @@ struct spdkfs_file {
 };
 struct fdtable {
 	unsigned int _file_count;
+	bool used[SPDK_MAX_FILE_CNT];
 	struct spdkfs_file *open_files[SPDK_MAX_FILE_CNT];
 };
 
 
 struct spdkfs_dir_persist_ctx {
-	unsigned int	i_uid;
-	unsigned int	i_gid;
+	unsigned int	mode;
 	long	i_atime;
 	long	i_mtime;
 	long	i_ctime;
-	size_t d_size;
+	size_t d_dirent_count;
 	unsigned int	i_writecount;
-	uint64_t i_parent_blob_id;
+	uint64_t _blob_id;
 	bool dirty;
 } __attribute__((aligned(4)));
 
 struct spdkfs_dir {
+	struct spdk_filesystem* fs;
 	struct blob *blob;
-	const struct spdk_file_operations	*d_op;
 	unsigned int d_flags;
-	struct spdkfs_dir_persist_ctx *dir_persist;
+	struct spdkfs_dir* parent;
+
+	const struct spdk_dir_operations	*d_op;
 
 	bool initialized;
-	int dirent_count;
+	struct spdkfs_dir_persist_ctx *dir_persist;
 	struct spdkfs_dirent *dirents;
-	struct spdkfs_dir_persist_ctx *dir_persists;
+	int dir_mem_cap;
+	int dirent_count;
 
 };
 
-struct spdkfs_dirent_persist_ctx {
+struct spdkfs_dirent {
 	char _name[SPDK_MAX_NAME_COUNT];
 	spdk_blob_id		_id;
 } __attribute__((aligned(4)));
 
-struct spdkfs_dirent {
-	struct spdkfs_dirent_persist_ctx *d_ctx;
-	struct spdk_dirent *_parent;
-	struct spdk_blob *_blob;
-};
 
 struct spdk_fs_operations {
 	void (*alloc_blob)(struct spdk_filesystem *sb, spdk_fs_callback cb_fn, void *cb_args);
@@ -115,6 +113,13 @@ struct spdk_file_operations {
 	void (*spdk_close)(struct spdkfs_file *file, void *);
 	void (*spdk_create)(struct spdk_blob *blob, struct spdkfs_file *file, void *);
 	void (*spdk_release)(struct spdk_blob *blob, struct spdkfs_file *file, void *);
+};
+
+struct spdk_dir_operations {
+	void (*spdk_mkdir)		(struct spdkfs_dir* dir);
+	void (*spdk_readdir)	(struct spdkfs_dir* dir);
+	void (*spdk_writedir)	(struct spdkfs_dir* dir);
+	void (*spdk_closedir)	(struct spdkfs_dir* dir);
 };
 
 struct spdk_fs_init_ctx {

@@ -110,10 +110,10 @@ void simple_fs_close(struct spdkfs_file *file, void *);
  * \param dir_param context for dir operations
 \
  */
-void simple_dir_read(struct spdkfs_file *, size_t, loff_t *, void *);
-void simple_dir_write(struct spdkfs_file *, size_t, loff_t *, void *);
-void simple_dir_open(struct spdk_blob *, struct spdkfs_file *, void *);
-void simple_dir_create(struct spdk_blob *, struct spdkfs_file *, void *);
+void simple_dir_read(struct spdkfs_dir *dir);
+void simple_dir_write(struct spdkfs_dir *dir);
+void simple_dir_open(struct spdkfs_dir *dir);
+void simple_dir_create(struct spdkfs_dir *dir);
 
 void bind_dir_ops(struct spdkfs_dir *);
 

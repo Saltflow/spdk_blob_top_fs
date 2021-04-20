@@ -10,13 +10,14 @@ static const struct spdk_file_operations simplefs_file_ops = {
 	.spdk_open = simple_fs_open,
 	.spdk_create = simple_fs_create,
 	.spdk_release = simple_fs_release,
+	.spdk_close = simple_fs_close,
 };
 
 static const struct spdk_file_operations simplefs_dir_ops = {
-	.spdk_read = simple_dir_read,
-	.spdk_write = simple_dir_write,
-	.spdk_open = simple_dir_open,
-	.spdk_create = simple_dir_create,
+	.spdk_mkdir			= simple_dir_read,
+	.spdk_readdir	 	= simple_dir_write,
+	.spdk_writedir 		= simple_dir_open,
+	.spdk_closedirte 	= simple_dir_create,
 };
 
 
@@ -44,12 +45,11 @@ void simple_fs_open(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_a
 }
 void simple_fs_create(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_args)
 {
-	file->_blob = blob;
 	file->file_persist->f_size = 0;
-	file->file_persist->i_parent_blob_id =  spdk_blob_get_id(file->_blob);
+	file->file_persist->_blob_id =  spdk_blob_get_id(file->_blob);
 	file->file_persist->i_writecount = 0;
 	file->file_persist->i_ctime = time(NULL);
-	spdk_blob_set_xattr(blob, "file_persistent", file->file_persist,
+	spdk_blob_set_xattr(file->_blob, "file_persistent", file->file_persist,
 			    sizeof(struct spdkfs_file_persist_ctx));
 
 }
@@ -58,6 +58,12 @@ void simple_fs_release(struct spdk_blob *blob, struct spdkfs_file *file, void *c
 
 }
 
+
+void simple_fs_close(struct spdkfs_file *file, void *cb_args)
+{
+	spdk_blob_set_xattr(file->_blob, "file_persistent", file->file_persist,
+			sizeof(struct spdkfs_file_persist_ctx));
+}
 
 void bind_dir_ops(struct spdkfs_dir *dir)
 {
@@ -70,47 +76,39 @@ void bind_file_ops(struct spdkfs_file *file)
 }
 
 // This function is expected to read once in the directory
-void simple_dir_read(struct spdkfs_file *dir, size_t size, loff_t *buffer, void *ctx)
+void simple_dir_read(struct spdkfs_dir *dir)
 {
 	assert(dir);
-	assert(ctx);
-
 	struct spdkfs_dir *open_dir = dir;
-	struct simple_fs_dir_ctx *dir_ctx = ctx;
-	int io_unit_size = spdk_bs_get_io_unit_size(dir_ctx->_op.fs->bs);
-	char *buffer = spdk_malloc(size, io_unit_size, NULL, SPDK_ENV_SOCKET_ID_ANY,
+	int io_unit_size = spdk_bs_get_io_unit_size(dir->fs);
+	char *buffer = spdk_malloc(dir->dir_persist->d_dirent_count, io_unit_size, NULL, SPDK_ENV_SOCKET_ID_ANY,
 				   SPDK_MALLOC_SHARE);
 
-	generic_blob_io(dir_ctx->_op.fs, dir,
+	generic_blob_io(dir->fs, dir,
 			sizeof(struct spdkfs_file_persist_ctx), io_unit_size, buffer, true);
 
-	int dirent_num = size / sizeof(struct spdkfs_dirent_persist_ctx);
+	int dirent_num = size / sizeof(struct spdkfs_dirent);
 
 }
 // Always append to the bottom
-void simple_dir_write(struct spdkfs_file *dir, size_t size, loff_t *buffer, void *ctx)
+void simple_dir_write(struct spdkfs_dir *dir)
 {
-	struct spdkfs_dir *open_dir = dir;
 
 }
 
-void simple_dir_open(struct spdk_blob *blob, struct spdkfs_file *dir, void *ctx)
+void simple_dir_open(struct spdkfs_dir *dir)
 {
 
 	struct spdkfs_dir *open_dir = dir;
-	open_dir->blob = blob;
-	if (!ctx) {
-		return;
-	}
-	struct simple_fs_dir_ctx *dir_ctx = ctx;
-	dir->f_op->spdk_read()
+
 }
-void simple_dir_create(struct spdk_blob *blob, struct spdkfs_file *dir, void *ctx)
+void simple_dir_create(struct spdkfs_dir *dir)
 {
-	struct general_op_cb_args *cb_args = ctx;
+	struct spdkfs_dir* create_dir = dir;
 	dir->_blob = blob;
-	dir->fs = cb_args->fs;
-	if (spdk_blob_get_id(dir->_blob) == spdk_blob_get_id(cb_args->fs->super_blob->blob)) {
-		return;
+	dir->
+	if(cb_args->parent == -1) // Super blob, no need to add parent
+	{
+		return; 
 	}
 }

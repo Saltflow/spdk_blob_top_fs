@@ -1,8 +1,8 @@
 #include "monopoly_ops.h"
 #include "blob_op.h"
 
-static struct fdtable g_fdtable;
-static struct spdkfs_dir *g_workdir;
+struct fdtable g_fdtable;
+struct spdkfs_dir *g_workdir;
 extern struct spdk_filesystem *g_filesystem;
 
 static int find_dir(const char *filename, struct spdkfs_dir *_dir)
@@ -44,20 +44,20 @@ static void return_fd_to_table(int fd)
 // memory are aligned in io_unit
 static bool add_dirent(struct spdk_blob *blob, const char *filename, struct spdkfs_dir *_dir)
 {
-	int io_unit = spdk_bs_get_io_unit_size(g_filesystem);
+	int io_unit = spdk_bs_get_io_unit_size(g_filesystem->bs);
 	_dir->dirty = true;
 	if (!_dir->dir_persist->d_size) {
 		_dir->dirents = spdk_malloc(io_unit, io_unit, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		_dir->dir_persist->d_size = io_unit;
 	}
-	if (_dir->dir_persist->d_size / io_unit <= _dir->dir_persist->d_dirent_count) {
+	if (_dir->dir_persist->d_size / io_unit <= _dir->dir_persist->d_dirent_count * sizeof(struct spdkfs_dirent)) {
 		_dir->dirents = spdk_realloc(_dir->dirents, _dir->dir_persist->d_size + io_unit, io_unit);
 		_dir->dir_persist->d_size += io_unit;
 	}
-	struct spdkfs_dirent *new_dirent =  &_dir->dirents[_dir->dir_persist->d_dirent_count];
+	struct spdkfs_dirent *new_dirent =  _dir->dirents + _dir->dir_persist->d_dirent_count;
 	new_dirent->_id = spdk_blob_get_id(blob);
 	memcpy(new_dirent->_name, filename, spdk_min(SPDK_MAX_NAME_COUNT, strlen(filename)));
-	_dir->dir_persist->d_dirent_count;
+	_dir->dir_persist->d_dirent_count++;
 }
 
 int monopoly_create(const char *__file, int __oflag)
@@ -67,6 +67,9 @@ int monopoly_create(const char *__file, int __oflag)
 	// Find if there exist an identical file
 	// If there exists, return the file
 	// Otherwise, allocate a blob , then add the blob in the directory
+
+	if(find_dir(__file, g_workdir) != -1)
+		return -1;
 	bind_file_ops(new_file);
 	new_file->fs = g_filesystem;
 	blob_create(&new_file->_blob);
@@ -99,7 +102,6 @@ int monopoly_open(const char *__file, int __oflag)
 int monopoly_close(int __fd)
 {
 	g_fdtable.open_files[__fd]->f_op->spdk_close(g_fdtable.open_files, NULL);
-	blob_close(g_fdtable.open_files[__fd]->_blob);
 	return_fd_to_table(__fd);
 	return 0;
 }

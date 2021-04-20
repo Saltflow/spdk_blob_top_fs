@@ -4,7 +4,6 @@
 #include "blob_op.h"
 
 static const struct spdk_file_operations simplefs_file_ops = {
-	.spdk_lseek = simple_fs_lseek,
 	.spdk_read = simple_fs_read,
 	.spdk_write = simple_fs_write,
 	.spdk_open = simple_fs_open,
@@ -21,10 +20,6 @@ static const struct spdk_dir_operations simplefs_dir_ops = {
 };
 
 
-void simple_fs_lseek(struct spdkfs_file *file, loff_t offset, int f_flag, void *cb_args)
-{
-
-}
 void simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer, void *cb_args)
 {
 	assert(size % 512 == 0);
@@ -41,6 +36,11 @@ void simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer, void *
 	if (file->f_pos + size > file_max_size) {
 		generic_blob_resize(file->fs, file->_blob, file_max_size * 2);
 	}
+	file->f_pos += size;
+	if(file->f_pos > file->file_persist->f_size)
+		file->file_persist->f_size = file->f_pos;
+	file->file_persist->i_writecount++;
+	generic_blob_io(file->fs, file->_blob, size, file->f_pos, buffer, false);
 }
 void simple_fs_open(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_args)
 {
@@ -51,6 +51,7 @@ void simple_fs_open(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_a
 }
 void simple_fs_create(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_args)
 {
+	file->file_persist = malloc(sizeof(struct spdkfs_file_persist_ctx));
 	file->file_persist->f_size = 0;
 	file->file_persist->_blob_id =  spdk_blob_get_id(file->_blob);
 	file->file_persist->i_writecount = 0;
@@ -69,6 +70,7 @@ void simple_fs_close(struct spdkfs_file *file, void *cb_args)
 {
 	spdk_blob_set_xattr(file->_blob, "file_persistent", file->file_persist,
 			    sizeof(struct spdkfs_file_persist_ctx));
+	blob_close(file->_blob);
 }
 
 void bind_dir_ops(struct spdkfs_dir *dir)
@@ -115,15 +117,16 @@ void simple_dir_close(struct spdkfs_dir *dir)
 }
 void simple_dir_create(struct spdkfs_dir *dir)
 {
+	dir->dir_persist = malloc(sizeof(struct spdkfs_dir_persist_ctx));
 	// Persist data
 	dir->dir_persist->d_dirent_count = 0;
 	dir->dir_persist->_blob_id = spdk_blob_get_id(dir->blob);
 	dir->dir_persist->i_ctime = time(NULL);
+	dir->dir_persist->d_size = 0;
 	spdk_blob_set_xattr(dir->blob, "dir_persistent", dir->dir_persist,
 			    sizeof(struct spdkfs_dir_persist_ctx));
 
 	// In-memory data
-	dir->dir_persist->d_size = 0;
 	dir->initialized = true;
 	dir->dirty = false;
 

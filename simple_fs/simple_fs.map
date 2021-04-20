@@ -19,6 +19,11 @@
 	__spdk_read;
 	__spdk_write;
 	__spdk_lseek;
-
+	monopoly_open;
+	monopoly_close;
+	monopoly_read;
+	monopoly_write;
+	monopoly_create;
+	monopoly_lseek;
 	local: *;
 };

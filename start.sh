@@ -1,4 +1,4 @@
-PROGRAM="hello_src"
+PROGRAM="file_ut/file_ut"
 DB="db"
 if [ "$1" == "$DB" ];
 then

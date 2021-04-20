@@ -5,6 +5,7 @@
 #include "blob_op.h"
 struct spdk_filesystem *g_filesystem = NULL;
 struct spdk_thread *g_spdkfs_thread;
+extern struct spdkfs_dir *g_workdir;
 static int META_SIZE = 0;
 
 extern void initialize_interface();
@@ -63,6 +64,7 @@ static void load_root()
 		root->d_op->spdk_readdir(root);
 	}
 	root->parent = -1;
+	g_workdir = root;
 }
 
 void load_simple_spdk_fs()
@@ -138,9 +140,9 @@ static void delete_blob_finished(void *cb_arg, int bserrno)
 	return;
 }
 
-void simple_fs_destroy_blob(struct spdk_blob *blob, spdk_fs_callback cb_fn, void *cb_args)
+void simple_fs_free_blob(struct spdk_blob *op_blob, struct fs_blob_ctx *cb_args)
 {
-	spdk_bs_delete_blob(g_filesystem->bs, spdk_blob_get_id(blob), delete_blob_finished, cb_args);
+	spdk_bs_delete_blob(g_filesystem->bs, spdk_blob_get_id(op_blob), delete_blob_finished, cb_args);
 }
 
 static void unload_complete_cb(void *cb_arg, int bserrno)

@@ -74,10 +74,10 @@ struct spdkfs_dir_persist_ctx {
 } __attribute__((aligned(4)));
 
 struct spdkfs_dir {
-	struct spdk_filesystem* fs;
+	struct spdk_filesystem *fs;
 	struct spdk_blob *blob;
 	unsigned int d_flags;
-	struct spdkfs_dir* parent;
+	struct spdkfs_dir *parent;
 
 	const struct spdk_dir_operations	*d_op;
 
@@ -95,7 +95,7 @@ struct spdkfs_dirent {
 
 
 struct fs_blob_ctx {
-	bool* done;
+	bool *done;
 	int fs_errno;
 	struct spdk_blob *op_blob;
 	spdk_blob_id op_blob_id;
@@ -104,8 +104,8 @@ struct fs_blob_ctx {
 
 
 struct spdk_fs_operations {
-	void (*alloc_blob)(struct spdk_filesystem *sb,struct fs_blob_ctx*);
-	void (*free_blob)(struct spdk_blob *,struct fs_blob_ctx*);
+	void (*alloc_blob)(struct spdk_filesystem *sb, struct fs_blob_ctx *);
+	void (*free_blob)(struct spdk_blob *, struct fs_blob_ctx *);
 };
 
 
@@ -123,10 +123,10 @@ struct spdk_file_operations {
 };
 
 struct spdk_dir_operations {
-	void (*spdk_mkdir)		(struct spdkfs_dir* dir);
-	void (*spdk_readdir)	(struct spdkfs_dir* dir);
-	void (*spdk_writedir)	(struct spdkfs_dir* dir);
-	void (*spdk_closedir)	(struct spdkfs_dir* dir);
+	void (*spdk_mkdir)(struct spdkfs_dir *dir);
+	void (*spdk_readdir)(struct spdkfs_dir *dir);
+	void (*spdk_writedir)(struct spdkfs_dir *dir);
+	void (*spdk_closedir)(struct spdkfs_dir *dir);
 };
 
 struct spdk_fs_init_ctx {

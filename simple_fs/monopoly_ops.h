@@ -7,12 +7,12 @@
 int monopoly_open(const char *__file, int __oflag);
 int monopoly_close(int __fd);
 
+// NOTE: SPDK Blob only support read/write in io_unit size
 ssize_t monopoly_read(int __fd, void *__buf, size_t __nbytes);
-
 ssize_t monopoly_write(int __fd, const void *__buf, size_t __nbytes);
-
+int monopoly_create(const char *__file, int __oflag);
 
 __off_t monopoly_lseek(int __fd, __off_t __offset, int __whence);
 
- int mkdir(const char *pathname, mode_t mode);
+int mkdir(const char *pathname, mode_t mode);
 #endif

@@ -52,7 +52,7 @@ static void load_root()
 {
 	g_filesystem->super_blob->root = malloc(sizeof(struct spdkfs_dir));
 	bind_dir_ops(g_filesystem->super_blob->root);
-	struct spdkfs_dir* root = g_filesystem->super_blob->root;
+	struct spdkfs_dir *root = g_filesystem->super_blob->root;
 	root->blob = g_filesystem->super_blob->blob;
 	root->fs = g_filesystem;
 	uint64_t size = spdk_blob_get_num_clusters(g_filesystem->super_blob->blob);
@@ -81,8 +81,8 @@ void load_simple_spdk_fs()
 	load_root();
 }
 
-void simple_fs_alloc_blob(struct spdk_filesystem *fs, struct fs_blob_ctx* cb_args);
-void simple_fs_free_blob(struct spdk_blob *op_blob,struct fs_blob_ctx* cb_args);
+void simple_fs_alloc_blob(struct spdk_filesystem *fs, struct fs_blob_ctx *cb_args);
+void simple_fs_free_blob(struct spdk_blob *op_blob, struct fs_blob_ctx *cb_args);
 
 static const struct spdk_fs_operations simple_fs_operations = {
 	.alloc_blob		= simple_fs_alloc_blob,
@@ -122,7 +122,7 @@ static void create_blob_finished(void *cb_arg, spdk_blob_id blobid, int bserrno)
 	spdk_bs_open_blob(g_filesystem->bs, blobid, open_blob_finished, cb_arg);
 }
 
-void simple_fs_alloc_blob(struct spdk_filesystem *fs, struct fs_blob_ctx* cb_args)
+void simple_fs_alloc_blob(struct spdk_filesystem *fs, struct fs_blob_ctx *cb_args)
 {
 	spdk_bs_create_blob(fs->bs, create_blob_finished,  cb_args);
 }

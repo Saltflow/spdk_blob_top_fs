@@ -39,20 +39,18 @@ bool blob_create(struct spdk_blob **blob)
 static void open_blob_complete(void *cb_arg, struct spdk_blob *blb, int bserrno)
 {
 	struct fs_blob_ctx *args = cb_arg;
-	args->fs_errno = bserrno;;
+	args->fs_errno = bserrno;
 	if (bserrno) {
 		SPDK_ERRLOG("Something wrong when open the blob! bserrno = %d\n", bserrno);
-		args->done = true;
-		return;
 	}
 	args->op_blob = blb;
-	args->done = true;
+	*args->done = true;
 }
 
 static void open_blob(void *ctx)
 {
 	struct fs_blob_ctx *args = ctx;
-	spdk_bs_open_blob(g_filesystem->bs, args->op_blob_id, open_blob_complete, ctx);
+	spdk_bs_open_blob(g_filesystem->bs, args->op_blob_id, open_blob_complete, args);
 }
 
 bool blob_open(struct spdk_blob **blob, spdk_blob_id blob_id)
@@ -60,6 +58,7 @@ bool blob_open(struct spdk_blob **blob, spdk_blob_id blob_id)
 	bool done;
 	struct fs_blob_ctx args = {&done, 0, *blob, blob_id};
 	generic_poller(g_filesystem->op_thread, open_blob, &args, &done);
+	*blob = args.op_blob;
 	if (!args.fs_errno) {
 		return true;
 	} else {
@@ -74,7 +73,7 @@ static void close_blob_complete(void *cb_arg, int bserrno)
 	if (bserrno) {
 		SPDK_ERRLOG("Something wrong when closing the blob! bserrno = %d\n", bserrno);
 	}
-	args->done = true;
+	*args->done = true;
 }
 
 static void close_blob(void *ctx)
@@ -161,6 +160,7 @@ static void resize_blob_complete(void *cb_arg, int bserrno)
 static void resize_blob(void *context)
 {
 	struct blob_rw_ctx *rw_ctx = context;
+	assert(rw_ctx->rw_size);
 	uint64_t resize_unit = spdk_bs_get_cluster_size(rw_ctx->fs->bs);
 	spdk_blob_resize(rw_ctx->rw_blob, (rw_ctx->rw_size - 1) / resize_unit + 1, resize_blob_complete,
 			 rw_ctx);

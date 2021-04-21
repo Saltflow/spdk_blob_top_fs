@@ -19,6 +19,11 @@ static const struct spdk_dir_operations simplefs_dir_ops = {
 	.spdk_closedir	 	= simple_dir_close,
 };
 
+static inline size_t get_blob_size(struct spdk_blob* blob, struct spdk_blob_store * bs)
+{
+	return spdk_blob_get_num_clusters(blob) * spdk_bs_get_cluster_size(bs);
+}
+
 
 void simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer, void *cb_args)
 {
@@ -31,10 +36,9 @@ void simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer, void *c
 }
 void simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer, void *cb_args)
 {
-	size_t file_max_size = spdk_blob_get_num_clusters(file->_blob) * spdk_bs_get_cluster_size(
-				       file->fs->bs);
+	size_t file_max_size = get_blob_size(file->_blob, file->fs->bs);
 	if (file->f_pos + size > file_max_size) {
-		generic_blob_resize(file->fs, file->_blob, file_max_size * 2);
+		generic_blob_resize(file->fs, file->_blob, file_max_size + spdk_bs_get_cluster_size(file->fs->bs));
 	}
 	file->f_pos += size;
 	if(file->f_pos > file->file_persist->f_size)
@@ -44,9 +48,10 @@ void simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer, void *
 }
 void simple_fs_open(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_args)
 {
-	file->_blob = blob;
+	assert(blob == NULL);
 	size_t len;
-	spdk_blob_get_xattr_value(blob, "file_persistent", &file->file_persist, &len);
+	spdk_set_thread(file->fs->op_thread);
+	spdk_blob_get_xattr_value(file->_blob, "file_persistent", &file->file_persist, &len);
 	assert(len == sizeof(struct spdkfs_file_persist_ctx));
 }
 void simple_fs_create(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_args)
@@ -95,6 +100,9 @@ void simple_dir_read(struct spdkfs_dir *dir)
 				   SPDK_MALLOC_SHARE);
 	generic_blob_io(dir->fs, dir->blob, dir->dir_persist->d_size, 0, dir->dirents, true);
 
+	// In-memory data
+	dir->initialized = true;
+	dir->dirty = false;
 }
 // Always append to the bottom
 void simple_dir_write(struct spdkfs_dir *dir)
@@ -103,6 +111,7 @@ void simple_dir_write(struct spdkfs_dir *dir)
 		return;
 	}
 	dir->dirty = false;
+	spdk_set_thread(dir->fs->op_thread);
 	spdk_blob_set_xattr(dir->blob, "dir_persistent", dir->dir_persist,
 			    sizeof(struct spdkfs_dir_persist_ctx));
 	generic_blob_io(dir->fs, dir->blob, dir->dir_persist->d_size, 0, dir->dirents, false);
@@ -111,7 +120,10 @@ void simple_dir_write(struct spdkfs_dir *dir)
 void simple_dir_close(struct spdkfs_dir *dir)
 {
 	if (dir->dirty) {
+		if(dir->dir_persist->d_size > get_blob_size(dir->blob, dir->fs->bs))
+			generic_blob_resize(dir->fs, dir->blob, dir->dir_persist->d_size);
 		generic_blob_io(dir->fs, dir->blob, dir->dir_persist->d_size, 0, dir->dirents, false);
+		spdk_blob_set_xattr(dir->blob, "dir_persistent", dir->dir_persist, sizeof(struct spdkfs_dir_persist_ctx));
 	}
 	blob_close(dir->blob);
 }

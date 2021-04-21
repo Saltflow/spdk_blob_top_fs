@@ -50,7 +50,8 @@ static bool add_dirent(struct spdk_blob *blob, const char *filename, struct spdk
 		_dir->dirents = spdk_malloc(io_unit, io_unit, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		_dir->dir_persist->d_size = io_unit;
 	}
-	if (_dir->dir_persist->d_size / io_unit <= _dir->dir_persist->d_dirent_count * sizeof(struct spdkfs_dirent)) {
+	if (_dir->dir_persist->d_size / io_unit <= _dir->dir_persist->d_dirent_count * sizeof(
+		    struct spdkfs_dirent)) {
 		_dir->dirents = spdk_realloc(_dir->dirents, _dir->dir_persist->d_size + io_unit, io_unit);
 		_dir->dir_persist->d_size += io_unit;
 	}
@@ -68,8 +69,10 @@ int monopoly_create(const char *__file, int __oflag)
 	// If there exists, return the file
 	// Otherwise, allocate a blob , then add the blob in the directory
 
-	if(find_dir(__file, g_workdir) != -1)
+	if (find_dir(__file, g_workdir) != -1) {
+		SPDK_ERRLOG("File already exist!\n");
 		return -1;
+	}
 	bind_file_ops(new_file);
 	new_file->fs = g_filesystem;
 	blob_create(&new_file->_blob);
@@ -77,6 +80,7 @@ int monopoly_create(const char *__file, int __oflag)
 	add_dirent(new_file->_blob, __file, g_workdir);
 	int new_fd = get_fd_from_table();
 	if (new_fd == -1) {
+		SPDK_ERRLOG("Fd table already full!\n");
 		return -1;
 	}
 	g_fdtable.open_files[new_fd] = new_file;
@@ -90,12 +94,16 @@ int monopoly_open(const char *__file, int __oflag)
 		SPDK_ERRLOG("Cannot find file!\n");
 		return -1;
 	}
-	struct spdk_blob *blob;
-	blob_open(&blob, g_workdir->dirents[dirent_num]._id);
 	struct spdkfs_file *file = malloc(sizeof(struct spdkfs_file));
+	blob_open(&file->_blob, g_workdir->dirents[dirent_num]._id);
 	bind_file_ops(file);
-	file->f_op->spdk_open(blob, file, NULL);
+	file->fs = g_filesystem;
+	file->f_op->spdk_open(NULL ,file , NULL);
 	int new_fd = get_fd_from_table();
+	if (new_fd == -1) {
+		SPDK_ERRLOG("Fd table already full!\n");
+		return -1;
+	}
 	g_fdtable.open_files[new_fd] = file;
 	return new_fd;
 }
@@ -108,6 +116,7 @@ int monopoly_close(int __fd)
 
 ssize_t monopoly_read(int __fd, void *__buf, size_t __nbytes)
 {
+	assert(__fd != -1);
 	struct spdkfs_file *file = g_fdtable.open_files[__fd];
 	int io_unit = spdk_bs_get_io_unit_size(file->fs->bs);
 	if (__nbytes % io_unit) {
@@ -119,6 +128,7 @@ ssize_t monopoly_read(int __fd, void *__buf, size_t __nbytes)
 
 ssize_t monopoly_write(int __fd, const void *__buf, size_t __nbytes)
 {
+	assert(__fd != -1);
 	struct spdkfs_file *file = g_fdtable.open_files[__fd];
 	int io_unit = spdk_bs_get_io_unit_size(file->fs->bs);
 	if (__nbytes % io_unit) {
@@ -131,9 +141,10 @@ ssize_t monopoly_write(int __fd, const void *__buf, size_t __nbytes)
 
 __off_t monopoly_lseek(int __fd, __off_t __offset, int __whence)
 {
+	assert(__fd != -1);
 	struct spdkfs_file *file = g_fdtable.open_files[__fd];
 	int io_unit = spdk_bs_get_io_unit_size(file->fs->bs);
-	__off_t actual_seek = __offset / io_unit;
+	__off_t actual_seek = __offset / io_unit * io_unit;
 	if (__whence | SEEK_SET) {
 		file->f_pos = actual_seek;
 	}

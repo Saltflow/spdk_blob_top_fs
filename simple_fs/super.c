@@ -154,10 +154,6 @@ static void unload_complete_cb(void *cb_arg, int bserrno)
 	*done = true;
 }
 
-static void unload_superblob_fn(void *ctx)
-{
-	spdk_blob_close(g_filesystem->super_blob->blob, unload_complete_cb, ctx);
-}
 
 static void unload_bs_fn(void *ctx)
 {
@@ -179,11 +175,10 @@ static void stop_subsystem(void *ctx)
 void unload_simple_spdk_fs()
 {
 	bool done = false;
-	generic_poller(g_spdkfs_thread, unload_superblob_fn, &done, &done);
+	g_filesystem->super_blob->root->d_op->spdk_closedir(g_filesystem->super_blob->root);
 	done = false;
 	generic_poller(g_spdkfs_thread, unload_bs_fn, &done, &done);
 	done = false;
-	generic_poller(g_spdkfs_thread, stop_subsystem_complete_cb, &done, &done);
 	spdk_thread_exit(g_spdkfs_thread);
 	done = false;
 	generic_poller(g_spdkfs_thread, stop_subsystem_complete_cb, &done, &done);

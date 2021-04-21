@@ -61,13 +61,13 @@ static bool add_dirent(struct spdk_blob *blob, const char *filename, struct spdk
 	_dir->dir_persist->d_dirent_count++;
 }
 
+// Find if there exist an identical file
+// If there exists, return the file
+// Otherwise, allocate a blob , then add the blob in the directory
 int monopoly_create(const char *__file, int __oflag)
 {
 	assert(g_workdir->initialized);
 	struct spdkfs_file *new_file = malloc(sizeof(struct spdkfs_file));
-	// Find if there exist an identical file
-	// If there exists, return the file
-	// Otherwise, allocate a blob , then add the blob in the directory
 
 	if (find_dir(__file, g_workdir) != -1) {
 		SPDK_ERRLOG("File already exist!\n");
@@ -76,7 +76,7 @@ int monopoly_create(const char *__file, int __oflag)
 	bind_file_ops(new_file);
 	new_file->fs = g_filesystem;
 	blob_create(&new_file->_blob);
-	new_file->f_op->spdk_create(NULL, new_file, NULL);
+	new_file->f_op->spdk_create(new_file);
 	add_dirent(new_file->_blob, __file, g_workdir);
 	int new_fd = get_fd_from_table();
 	if (new_fd == -1) {
@@ -98,7 +98,7 @@ int monopoly_open(const char *__file, int __oflag)
 	blob_open(&file->_blob, g_workdir->dirents[dirent_num]._id);
 	bind_file_ops(file);
 	file->fs = g_filesystem;
-	file->f_op->spdk_open(NULL ,file , NULL);
+	file->f_op->spdk_open(file);
 	int new_fd = get_fd_from_table();
 	if (new_fd == -1) {
 		SPDK_ERRLOG("Fd table already full!\n");
@@ -109,7 +109,7 @@ int monopoly_open(const char *__file, int __oflag)
 }
 int monopoly_close(int __fd)
 {
-	g_fdtable.open_files[__fd]->f_op->spdk_close(g_fdtable.open_files, NULL);
+	g_fdtable.open_files[__fd]->f_op->spdk_close(g_fdtable.open_files[__fd]);
 	return_fd_to_table(__fd);
 	return 0;
 }
@@ -122,7 +122,7 @@ ssize_t monopoly_read(int __fd, void *__buf, size_t __nbytes)
 	if (__nbytes % io_unit) {
 		__nbytes = (__nbytes - 1) / io_unit + 1;
 	}
-	file->f_op->spdk_read(file, __nbytes, __buf, NULL);
+	file->f_op->spdk_read(file, __nbytes, __buf);
 	return __nbytes;
 }
 
@@ -134,7 +134,7 @@ ssize_t monopoly_write(int __fd, const void *__buf, size_t __nbytes)
 	if (__nbytes % io_unit) {
 		__nbytes = (__nbytes - 1) / io_unit + 1;
 	}
-	file->f_op->spdk_write(file, __nbytes, __buf, NULL);
+	file->f_op->spdk_write(file, __nbytes, __buf);
 	return __nbytes;
 }
 

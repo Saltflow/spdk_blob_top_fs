@@ -51,8 +51,9 @@
 int main()
 {
 	int fd = monopoly_create("spdkfs/hello", O_CREAT);
-	if(fd == -1)
+	if (fd == -1) {
 		fd = monopoly_open("spdkfs/hello", O_CREAT);
+	}
 	char *buffer = spdk_malloc(4096, 512, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 	memset(buffer, 65, 4096);
 	buffer[14] = '\0';

@@ -7,5 +7,9 @@
     load_fs_ops;
 	spdk_blob_stat;
 
+	spdkfs_mm_init;
+	spdkfs_malloc;
+	spdkfs_realloc;
+	spdkfs_free;
 	local: *;
 };

@@ -56,7 +56,7 @@ struct spdkfs_file {
 	struct spdkfs_file_persist_ctx	*file_persist;
 
 	loff_t			f_pos;
-	void* xattr;
+	void *xattr;
 };
 struct fdtable {
 	unsigned int _file_count;
@@ -87,7 +87,7 @@ struct spdkfs_dir {
 	struct spdkfs_dir_persist_ctx *dir_persist;
 	struct spdkfs_dirent *dirents;
 	bool dirty;
-	void* xattr;
+	void *xattr;
 };
 
 struct spdkfs_dirent {

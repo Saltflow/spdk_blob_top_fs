@@ -25,7 +25,7 @@ static inline size_t get_blob_size(struct spdk_blob* blob, struct spdk_blob_stor
 }
 
 
-void simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer, void *cb_args)
+void simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer)
 {
 	assert(size % 512 == 0);
 	if (file->f_pos + size > file->file_persist->f_size) {
@@ -34,7 +34,7 @@ void simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer, void *c
 	generic_blob_io(file->fs, file->_blob, size, file->f_pos, buffer, true);
 
 }
-void simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer, void *cb_args)
+void simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer)
 {
 	size_t file_max_size = get_blob_size(file->_blob, file->fs->bs);
 	if (file->f_pos + size > file_max_size) {
@@ -46,15 +46,14 @@ void simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer, void *
 	file->file_persist->i_writecount++;
 	generic_blob_io(file->fs, file->_blob, size, file->f_pos, buffer, false);
 }
-void simple_fs_open(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_args)
+void simple_fs_open(struct spdkfs_file *file)
 {
-	assert(blob == NULL);
 	size_t len;
 	spdk_set_thread(file->fs->op_thread);
 	spdk_blob_get_xattr_value(file->_blob, "file_persistent", &file->file_persist, &len);
 	assert(len == sizeof(struct spdkfs_file_persist_ctx));
 }
-void simple_fs_create(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_args)
+void simple_fs_create(struct spdkfs_file *file)
 {
 	file->file_persist = malloc(sizeof(struct spdkfs_file_persist_ctx));
 	file->file_persist->f_size = 0;
@@ -65,13 +64,13 @@ void simple_fs_create(struct spdk_blob *blob, struct spdkfs_file *file, void *cb
 			    sizeof(struct spdkfs_file_persist_ctx));
 
 }
-void simple_fs_release(struct spdk_blob *blob, struct spdkfs_file *file, void *cb_args)
+void simple_fs_release(struct spdkfs_file *file)
 {
 
 }
 
 
-void simple_fs_close(struct spdkfs_file *file, void *cb_args)
+void simple_fs_close(struct spdkfs_file *file)
 {
 	spdk_blob_set_xattr(file->_blob, "file_persistent", file->file_persist,
 			    sizeof(struct spdkfs_file_persist_ctx));

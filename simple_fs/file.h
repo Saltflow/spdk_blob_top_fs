@@ -13,7 +13,7 @@
  * \param file_param context for file operations
  */
 
-void simple_fs_lseek(struct spdkfs_file *, loff_t, int, void *);
+void simple_fs_lseek(struct spdkfs_file *, loff_t, int);
 
 /**
  * Read the data from the given file
@@ -24,7 +24,7 @@ void simple_fs_lseek(struct spdkfs_file *, loff_t, int, void *);
  * \param file_param context for file operations
 \
  */
-void simple_fs_read(struct spdkfs_file *, size_t, void *, void *);
+void simple_fs_read(struct spdkfs_file *, size_t, void *);
 /**
  * Write the data to the given file
  *
@@ -35,47 +35,38 @@ void simple_fs_read(struct spdkfs_file *, size_t, void *, void *);
 \
  */
 
-void simple_fs_write(struct spdkfs_file *, size_t, void *, void *);
+void simple_fs_write(struct spdkfs_file *, size_t, void *);
 /**
  * Filling the file persistent structure with the give blob
- *
- * \param blob blob to read file metadata
+ * Note that before calling ,file->fs and file->_blob must be properly set
  * \param file file structure to fill
- * \param file_param context for file operations
  *
  */
-void simple_fs_open(struct spdk_blob *, struct spdkfs_file *, void *);
+void simple_fs_open(struct spdkfs_file *);
 /**
  * Filling the file persistent structure with the give blob
- *
- * \param blob blob to alloc file meta
+ * Note that before calling ,file->fs and file->_blob must be properly set
  * \param file file structure to fill
- * \param file_param context for file operations
  *
  */
-void simple_fs_create(struct spdk_blob *, struct spdkfs_file *, void *);
+void simple_fs_create(struct spdkfs_file *);
 
 /**
  * Remove the file's resource
  *
- * \param blob blob to read file metadata
  * \param file file structure to fill
- * \param file_param context for file operations : operation parameters, parent dir blobid
  *
  */
-void simple_fs_release(struct spdk_blob *, struct spdkfs_file *, void *);
+void simple_fs_release(struct spdkfs_file *);
 
 
 
 
-void simple_fs_close(struct spdkfs_file *file, void *);
+void simple_fs_close(struct spdkfs_file *file);
 /**
  * Read the data from the given directory
  *
- * \param file actually a directory structure, the given directory to read
- * \param size Not applicable
- * \param buffer buffer for data
- * \param dir_param context for dir operations
+ * \param dir
 \
  */
 void simple_dir_read(struct spdkfs_dir *dir);

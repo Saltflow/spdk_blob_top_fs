@@ -54,7 +54,7 @@ struct spdkfs_file {
 	struct spdkfs_file_persist_ctx	*file_persist;
 
 	loff_t			f_pos;
-
+	void* xattr;
 };
 struct fdtable {
 	unsigned int _file_count;
@@ -85,7 +85,7 @@ struct spdkfs_dir {
 	struct spdkfs_dir_persist_ctx *dir_persist;
 	struct spdkfs_dirent *dirents;
 	bool dirty;
-
+	void* xattr;
 };
 
 struct spdkfs_dirent {
@@ -111,15 +111,14 @@ struct spdk_fs_operations {
 
 // All file operations should be perform at upper layer
 struct spdk_file_operations {
-	void (*spdk_lseek)(struct spdkfs_file *file, loff_t offset, int mode, void *);
-	void (*spdk_read)(struct spdkfs_file *file, size_t size, void *buffer, void *fs_ctx);
-	void (*spdk_write)(struct spdkfs_file *file, size_t size, void *buffer, void *fs_ctx);
-	// int (*spdk_mmap) (struct spdkfs_file *, struct vm_area_struct *);
-	unsigned long mmap_supported_flags;
-	void (*spdk_open)(struct spdk_blob *blob, struct spdkfs_file *file, void *);
-	void (*spdk_close)(struct spdkfs_file *file, void *);
-	void (*spdk_create)(struct spdk_blob *blob, struct spdkfs_file *file, void *);
-	void (*spdk_release)(struct spdk_blob *blob, struct spdkfs_file *file, void *);
+	void (*spdk_lseek)(struct spdkfs_file *file, loff_t offset, int mode);
+	void (*spdk_read)(struct spdkfs_file *file, size_t size, void *buffer);
+	void (*spdk_write)(struct spdkfs_file *file, size_t size, void *buffer);
+
+	void (*spdk_open)(struct spdkfs_file *file);
+	void (*spdk_close)(struct spdkfs_file *file);
+	void (*spdk_create)(struct spdkfs_file *file);
+	void (*spdk_release)(struct spdkfs_file *file);
 };
 
 struct spdk_dir_operations {

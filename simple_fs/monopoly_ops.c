@@ -120,7 +120,7 @@ ssize_t monopoly_read(int __fd, void *__buf, size_t __nbytes)
 	struct spdkfs_file *file = g_fdtable.open_files[__fd];
 	int io_unit = spdk_bs_get_io_unit_size(file->fs->bs);
 	if (__nbytes % io_unit) {
-		__nbytes = (__nbytes - 1) / io_unit + 1;
+		__nbytes = UPPER_DIV(__nbytes, io_unit);
 	}
 	file->f_op->spdk_read(file, __nbytes, __buf);
 	return __nbytes;
@@ -132,7 +132,7 @@ ssize_t monopoly_write(int __fd, const void *__buf, size_t __nbytes)
 	struct spdkfs_file *file = g_fdtable.open_files[__fd];
 	int io_unit = spdk_bs_get_io_unit_size(file->fs->bs);
 	if (__nbytes % io_unit) {
-		__nbytes = (__nbytes - 1) / io_unit + 1;
+		__nbytes = UPPER_DIV(__nbytes, io_unit);
 	}
 	file->f_op->spdk_write(file, __nbytes, __buf);
 	return __nbytes;
@@ -145,10 +145,10 @@ __off_t monopoly_lseek(int __fd, __off_t __offset, int __whence)
 	struct spdkfs_file *file = g_fdtable.open_files[__fd];
 	int io_unit = spdk_bs_get_io_unit_size(file->fs->bs);
 	__off_t actual_seek = __offset / io_unit * io_unit;
-	if (__whence | SEEK_SET) {
+	if (__whence == SEEK_SET) {
 		file->f_pos = actual_seek;
 	}
-	if (__whence | SEEK_CUR) {
+	if (__whence == SEEK_CUR) {
 		file->f_pos += actual_seek;
 	}
 	return file->f_pos;

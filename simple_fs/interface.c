@@ -1,6 +1,7 @@
 #include "interface.h"
 #include "blob_op.h"
 #include <dlfcn.h>
+#include "monopoly_ops.h"
 #define __GNU_SOURCE
 
 #define TESTFD 10086
@@ -65,17 +66,15 @@ int __spdk__open(const char *__file, int __oflag, ...)
 			return -1;
 		}
 		general_buffer =  spdk_malloc(2098176, 4096, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
-		blob_create(&test_blob);
-		SPDK_WARNLOG("blob id %lu\n", spdk_blob_get_id(test_blob));
-		generic_blob_resize(g_filesystem, test_blob, 4096 * 4096);
-		return TESTFD + 10;
+		int ret = monopoly_create(__file, __oflag);
+		if(ret == -1)
+		{
+			return TESTFD + monopoly_open(__file, __oflag);
+		}
+		return TESTFD + ret;
 	}
 	spdk_blob_id open_id;
-	sscanf(__file + 5, "%lu", &open_id);
-	blob_open(test_blob, open_id);
-	generic_blob_resize(g_filesystem, test_blob, 4096 * 4096);
-	blob_offset = 0;
-	return TESTFD + 10;
+	return TESTFD + monopoly_open(__file, __oflag);
 }
 
 int __spdk__close(int __fd)
@@ -83,8 +82,7 @@ int __spdk__close(int __fd)
 	if (__fd < TESTFD) {
 		return syscall(SYS_close, __fd);
 	}
-	blob_close(test_blob);
-	return 0;
+	return monopoly_close(__fd - TESTFD);
 }
 
 ssize_t __spdk_read(int __fd, void *__buf, size_t __nbytes)
@@ -92,11 +90,9 @@ ssize_t __spdk_read(int __fd, void *__buf, size_t __nbytes)
 	if (__fd < TESTFD) {
 		return syscall(SYS_read, __fd, __buf, __nbytes);
 	}
-	size_t io_unit =  spdk_bs_get_io_unit_size(g_filesystem->bs);
-	size_t io_size = ((__nbytes - 1) / io_unit + 1) * io_unit;
-	generic_blob_io(g_filesystem, test_blob, __nbytes, blob_offset, general_buffer, true);
-	memcpy(__buf, general_buffer, io_size);
-	return io_size;
+	int ret = monopoly_read(__fd  - TESTFD, general_buffer, __nbytes);
+	memcpy(__buf, general_buffer, __nbytes);
+	return ret;
 }
 ssize_t __spdk_write(int __fd, const void *__buf, size_t __nbytes)
 {
@@ -107,21 +103,14 @@ ssize_t __spdk_write(int __fd, const void *__buf, size_t __nbytes)
 	size_t io_size = ((__nbytes - 1) / io_unit + 1) * io_unit;
 
 	memcpy(general_buffer, __buf, io_size);
-	generic_blob_io(g_filesystem, test_blob, __nbytes, blob_offset, general_buffer, false);
-	return io_size;
+	return monopoly_write(__fd  - TESTFD, general_buffer, __nbytes);
 }
 __off_t __spdk_lseek(int __fd, __off_t __offset, int __whence)
 {
 	if (__fd < TESTFD) {
 		return syscall(SYS_lseek, __fd, __offset, __whence);
 	}
-	if (__whence | SEEK_SET) {
-		blob_offset = __offset;
-	}
-	if (__whence | SEEK_CUR) {
-		blob_offset += __offset;
-	}
-	return blob_offset;
+	return monopoly_lseek(__fd  - TESTFD, __offset, __whence);
 }
 
 int __spdk_stat(const char *__restrict__ __file, struct stat *__restrict__ __buf)

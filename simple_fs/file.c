@@ -32,7 +32,7 @@ void simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer)
 		return;
 	}
 	generic_blob_io(file->fs, file->_blob, size, file->f_pos, buffer, true);
-
+	file->f_pos += size;
 }
 void simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer)
 {
@@ -40,11 +40,11 @@ void simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer)
 	if (file->f_pos + size > file_max_size) {
 		generic_blob_resize(file->fs, file->_blob, file_max_size + spdk_bs_get_cluster_size(file->fs->bs));
 	}
-	file->f_pos += size;
 	if(file->f_pos > file->file_persist->f_size)
 		file->file_persist->f_size = file->f_pos;
 	file->file_persist->i_writecount++;
 	generic_blob_io(file->fs, file->_blob, size, file->f_pos, buffer, false);
+	file->f_pos += size;
 }
 void simple_fs_open(struct spdkfs_file *file)
 {
@@ -60,6 +60,7 @@ void simple_fs_create(struct spdkfs_file *file)
 	file->file_persist->_blob_id =  spdk_blob_get_id(file->_blob);
 	file->file_persist->i_writecount = 0;
 	file->file_persist->i_ctime = time(NULL);
+	spdk_set_thread(file->fs->op_thread);
 	spdk_blob_set_xattr(file->_blob, "file_persistent", file->file_persist,
 			    sizeof(struct spdkfs_file_persist_ctx));
 

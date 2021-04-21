@@ -111,12 +111,10 @@ static void io_blob(void *context)
 	uint64_t io_unit = spdk_bs_get_io_unit_size(rw_ctx->fs->bs);
 	if (rw_ctx->read)
 		spdk_blob_io_read(rw_ctx->rw_blob, rw_ctx->fs->io_channel, rw_ctx->rw_buffer,
-				  rw_ctx->rw_offset / io_unit,
-				  (rw_ctx->rw_size - 1) / io_unit + 1, io_blob_complete, rw_ctx);
+				  rw_ctx->rw_offset / io_unit, UPPER_DIV(rw_ctx->rw_size, io_unit), io_blob_complete, rw_ctx);
 	else
 		spdk_blob_io_write(rw_ctx->rw_blob,  rw_ctx->fs->io_channel, rw_ctx->rw_buffer,
-				   rw_ctx->rw_offset / io_unit,
-				   (rw_ctx->rw_size - 1) / io_unit + 1, io_blob_complete, rw_ctx);
+				   rw_ctx->rw_offset / io_unit, UPPER_DIV(rw_ctx->rw_size, io_unit) , io_blob_complete, rw_ctx);
 }
 
 
@@ -162,7 +160,7 @@ static void resize_blob(void *context)
 	struct blob_rw_ctx *rw_ctx = context;
 	assert(rw_ctx->rw_size);
 	uint64_t resize_unit = spdk_bs_get_cluster_size(rw_ctx->fs->bs);
-	spdk_blob_resize(rw_ctx->rw_blob, (rw_ctx->rw_size - 1) / resize_unit + 1, resize_blob_complete,
+	spdk_blob_resize(rw_ctx->rw_blob, UPPER_DIV(rw_ctx->rw_size, resize_unit), resize_blob_complete,
 			 rw_ctx);
 }
 // NOTE: resize are based on cluster ,not io_unit

@@ -179,10 +179,8 @@ void unload_simple_spdk_fs()
 	done = false;
 	generic_poller(g_spdkfs_thread, unload_bs_fn, &done, &done);
 	done = false;
-	spdk_thread_exit(g_spdkfs_thread);
-	done = false;
-	generic_poller(g_spdkfs_thread, stop_subsystem_complete_cb, &done, &done);
-	spdk_thread_destroy(g_spdkfs_thread);
+	generic_poller(g_spdkfs_thread, stop_subsystem, &done, &done);
 	free(g_filesystem);
+	spdk_thread_lib_fini();
 	spdk_env_dpdk_post_fini();
 }

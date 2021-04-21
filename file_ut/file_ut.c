@@ -64,5 +64,6 @@ int main()
 	monopoly_read(fd, buffer, 4096);
 	buffer[14] = '\0';
 	SPDK_WARNLOG("%s\n", buffer);
+	monopoly_close(fd);
 	return 0;
 }

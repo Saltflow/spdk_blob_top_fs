@@ -15,6 +15,8 @@
 #define SPDK_MAX_FILE_CNT 256
 #define SPDK_MAX_NAME_COUNT 50
 
+#define UPPER_DIV(a,b) (a - 1) / b + 1
+
 struct spdk_super_blob {
 	struct spdkfs_dir *root;
 	struct spdk_blob *blob;

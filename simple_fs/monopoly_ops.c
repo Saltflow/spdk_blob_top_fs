@@ -154,3 +154,25 @@ __off_t monopoly_lseek(int __fd, __off_t __offset, int __whence)
 	return file->f_pos;
 }
 
+int monopoly_stat(const char * __file, struct stat * __buf)
+{
+	int target_file_id = find_dir(__file, g_workdir);
+	if(target_file_id == -1) {
+		return -1;
+	}
+	struct spdk_blob* stat_blob;
+	if(!blob_open(&stat_blob, target_file_id))
+		return -1;
+
+	struct spdkfs_file_persist_ctx *file_meta;
+	size_t len;
+	spdk_blob_get_xattr_value(stat_blob, "file_persistent", file_meta, len);
+	assert(len == sizeof(struct spdkfs_file_persist_ctx));
+	__buf->st_ino = spdk_blob_get_id(stat_blob);
+	__buf->st_size = file_meta->f_size;
+	__buf->st_mtime = file_meta->i_mtime;
+	__buf->st_atime = file_meta->i_atime;
+	__buf->st_blksize = spdk_bs_get_io_unit_size(g_workdir->fs->bs);
+	__buf->st_uid = file_meta->i_uid;
+	return 0;
+}

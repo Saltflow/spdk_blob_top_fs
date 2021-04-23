@@ -12,7 +12,6 @@ extern struct spdk_filesystem *g_filesystem;
 static volatile struct spdk_blob *test_blob = NULL;
 static volatile char *general_buffer = NULL;
 
-// static void* (*r_malloc)(size_t) = NULL;
 static bool spdk_ptop_blobfile(const char *__file);
 
 static int (*r_open)(const char *__file, int __oflag, ...) = NULL;
@@ -115,9 +114,10 @@ __off_t __spdk_lseek(int __fd, __off_t __offset, int __whence)
 
 int __spdk_stat(const char *__restrict__ __file, struct stat *__restrict__ __buf)
 {
-	struct stat *file_stat = malloc(sizeof(struct stat));
-	file_stat->st_size = 2097152;
-	return 0;
+		if (!spdk_ptop_blobfile(__file)) {
+			stat(__file, __buf);
+		}
+		monopoly_stat(__file, __buf);
 }
 
 // void *__spdk__malloc(size_t __size)

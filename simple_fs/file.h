@@ -10,7 +10,6 @@
  * \param file file structure to modify
  * \param offset offset to set
  * \param mode offset posistion, now support SEEK_CUR SEEK_SET
- * \param file_param context for file operations
  */
 
 void simple_fs_lseek(struct spdkfs_file *, loff_t, int);
@@ -21,7 +20,6 @@ void simple_fs_lseek(struct spdkfs_file *, loff_t, int);
  * \param file file structure to read
  * \param size size of the writing
  * \param buffer buffer for data
- * \param file_param context for file operations
 \
  */
 void simple_fs_read(struct spdkfs_file *, size_t, void *);
@@ -31,7 +29,6 @@ void simple_fs_read(struct spdkfs_file *, size_t, void *);
  * \param file file structure to write, as well as to modify metadata
  * \param size size of the writing
  * \param buffer buffer for data
- * \param file_param context for file operations
 \
  */
 

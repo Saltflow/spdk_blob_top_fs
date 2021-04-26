@@ -82,7 +82,7 @@ void load_simple_spdk_fs()
 	spdk_blob_stat(&ctx);
 	load_fs_operations();
 	load_root();
-	
+	spdkfs_mm_init(g_filesystem);
 }
 
 void simple_fs_alloc_blob(struct spdk_filesystem *fs, struct fs_blob_ctx *cb_args);

@@ -77,6 +77,7 @@ int monopoly_create(const char *__file, int __oflag)
 	new_file->fs = g_filesystem;
 	blob_create(&new_file->_blob);
 	new_file->f_op->spdk_create(new_file);
+	new_file->f_pos = 0;
 	add_dirent(new_file->_blob, __file, g_workdir);
 	int new_fd = get_fd_from_table();
 	if (new_fd == -1) {
@@ -99,6 +100,7 @@ int monopoly_open(const char *__file, int __oflag)
 	bind_file_ops(file);
 	file->fs = g_filesystem;
 	file->f_op->spdk_open(file);
+	file->f_pos = 0;
 	int new_fd = get_fd_from_table();
 	if (new_fd == -1) {
 		SPDK_ERRLOG("Fd table already full!\n");

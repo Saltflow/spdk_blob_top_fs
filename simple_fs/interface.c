@@ -16,18 +16,12 @@ static volatile char *general_buffer = NULL;
 static bool spdk_ptop_blobfile(const char *__file);
 
 static int (*r_open)(const char *__file, int __oflag, ...) = NULL;
-static int (*r_close)(int __fd) = NULL;
-static ssize_t (*r_read)(int __fd, void *__buf, size_t __nbytes) = NULL;
-static ssize_t (*r_write)(int __fd, const void *__buf, size_t __nbytes) = NULL;
-static __off_t (*r_lseek)(int __fd, __off_t __offset, int __whence) = NULL;
+static int (*r_stat)(const char *__restrict__ __file, struct stat *__restrict__ __buf) = NULL;
 
 void initialize_interface()
 {
 	r_open = dlsym(RTLD_NEXT, "open64");
-	r_close = dlsym(RTLD_NEXT, "close");
-	r_read = dlsym(RTLD_NEXT, "read");
-	r_write = dlsym(RTLD_NEXT, "write");
-	r_lseek = dlsym(RTLD_NEXT, "lseek");
+	r_stat = dlsym(RTLD_NEXT, "stat");
 }
 
 
@@ -64,7 +58,6 @@ int __spdk_open(const char *__file, int __oflag, ...)
 			SPDK_ERRLOG("FD table already full!\n");
 			return -1;
 		}
-		general_buffer =  spdk_malloc(2098176, 4096, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 		int ret = monopoly_create(__file, __oflag);
 		if(ret == -1)
 		{
@@ -90,7 +83,6 @@ ssize_t __spdk_read(int __fd, void *__buf, size_t __nbytes)
 		return syscall(SYS_read, __fd, __buf, __nbytes);
 	}
 	int ret = monopoly_read(__fd  - TESTFD, general_buffer, __nbytes);
-	memcpy(__buf, general_buffer, __nbytes);
 	return ret;
 }
 ssize_t __spdk_write(int __fd, const void *__buf, size_t __nbytes)
@@ -98,10 +90,6 @@ ssize_t __spdk_write(int __fd, const void *__buf, size_t __nbytes)
 	if (__fd < TESTFD) {
 		return syscall(SYS_write, __fd, __buf, __nbytes);
 	}
-	size_t io_unit =  spdk_bs_get_io_unit_size(g_filesystem->bs);
-	size_t io_size = ((__nbytes - 1) / io_unit + 1) * io_unit;
-
-	memcpy(general_buffer, __buf, io_size);
 	return monopoly_write(__fd  - TESTFD, general_buffer, __nbytes);
 }
 __off_t __spdk_lseek(int __fd, __off_t __offset, int __whence)
@@ -114,10 +102,10 @@ __off_t __spdk_lseek(int __fd, __off_t __offset, int __whence)
 
 int __spdk_stat(const char *__restrict__ __file, struct stat *__restrict__ __buf)
 {
-		if (!spdk_ptop_blobfile(__file)) {
-			return stat(__file, __buf);
-		}
-		return monopoly_stat(__file, __buf);
+	if (!spdk_ptop_blobfile(__file)) {
+		return syscall(SYS_stat, __file, __buf);
+	}
+	return monopoly_stat(__file, __buf);
 }
 
 static void *(*r_malloc)(size_t) = NULL;
@@ -135,5 +123,8 @@ void *__spdk_malloc(size_t __size)
 
 
 int __spdk_unlink(const char *pathname) {
-
+	if (!spdk_ptop_blobfile(pathname)) {
+		return syscall(SYS_unlink, pathname);
+	}
+	return monopoly_unlink(pathname);
 }

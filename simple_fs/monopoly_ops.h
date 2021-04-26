@@ -16,5 +16,7 @@ __off_t monopoly_lseek(int __fd, __off_t __offset, int __whence);
 
 int monopoly_stat(const char *__file, struct stat *__buf);
 
+int monopoly_unlink(char *__filepath);
+
 int mkdir(const char *pathname, mode_t mode);
 #endif

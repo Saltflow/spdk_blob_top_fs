@@ -48,11 +48,11 @@
 #include "fio.h"
 #include "optgroup.h"
 
-#include"../simple_fs/interface.h"
+#include"../simple_fs/monopoly_ops.h"
 
 int spdk_open_file(struct thread_data *td, struct fio_file *f)
 {
-	f->fd = __spdk__open(f->file_name, O_CREAT, 0600);
+	f->fd = monopoly_open(f->file_name, O_CREAT) - 10086;
 	printf("%d\n", f->fd);
 	return 0;
 }
@@ -66,15 +66,14 @@ int spdk_get_file_size(struct thread_data *td, struct fio_file *f)
 
 int spdk_close_file(struct thread_data fio_unused *td, struct fio_file *f)
 {
-	__spdk__close(f->fd);
-
+	monopoly_close(f->fd);
 	f->fd = -1;
 	return 0;
 }
 
 static int fio_spdk_syncio_prep(struct thread_data *td, struct io_u *io_u)
 {
-	__spdk_lseek(io_u->file->fd, 0, SEEK_SET);
+	monopoly_lseek(io_u->file->fd, 0, SEEK_SET);
 	return 0;
 }
 
@@ -113,9 +112,9 @@ static enum fio_q_status fio_spdk_syncio_queue(struct thread_data *td,
 	fio_ro_check(td, io_u);
 
 	if (io_u->ddir == DDIR_READ) {
-		ret = __spdk_read(f->fd, io_u->xfer_buf, io_u->xfer_buflen);
+		ret = monopoly_read(f->fd, io_u->xfer_buf, io_u->xfer_buflen);
 	} else if (io_u->ddir == DDIR_WRITE) {
-		ret = __spdk_write(f->fd, io_u->xfer_buf, io_u->xfer_buflen);
+		ret = monopoly_write(f->fd, io_u->xfer_buf, io_u->xfer_buflen);
 	} else if (io_u->ddir == DDIR_TRIM) {
 		do_io_u_trim(td, io_u);
 		return FIO_Q_COMPLETED;

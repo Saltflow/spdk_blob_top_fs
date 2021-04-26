@@ -14,11 +14,6 @@
 	write;
 	lseek;
 	stat;
-	__spdk__open;
-	__spdk__close;
-	__spdk_read;
-	__spdk_write;
-	__spdk_lseek;
 	monopoly_open;
 	monopoly_close;
 	monopoly_read;

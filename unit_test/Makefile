@@ -1,4 +1,6 @@
 #
+#  BSD LICENSE
+#
 #  Copyright (c) Intel Corporation.
 #  All rights reserved.
 #
@@ -31,14 +33,12 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../spdk)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-FIO_PLUGIN = hello_src
+DIRS-y += file_test
 
-C_SRCS := fs_fio_plugin.c
+.PHONY: all clean $(DIRS-y)
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += $(EVENT_BDEV_SUBSYSTEM)
-SPDK_LIB_LIST += bdev accel event thread util conf trace log jsonrpc json rpc sock notify spdk_fs_top spdk_simple_fs
+all: $(DIRS-y)
+clean: $(DIRS-y)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.fio.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

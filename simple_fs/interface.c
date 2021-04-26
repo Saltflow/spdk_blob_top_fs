@@ -2,6 +2,7 @@
 #include "blob_op.h"
 #include <dlfcn.h>
 #include "monopoly_ops.h"
+#include "spdkfs/io_mm.h"
 #define __GNU_SOURCE
 
 #define TESTFD 10086
@@ -22,7 +23,6 @@ static __off_t (*r_lseek)(int __fd, __off_t __offset, int __whence) = NULL;
 
 void initialize_interface()
 {
-	// r_malloc = dlsym(RTLD_NEXT, "malloc");
 	r_open = dlsym(RTLD_NEXT, "open64");
 	r_close = dlsym(RTLD_NEXT, "close");
 	r_read = dlsym(RTLD_NEXT, "read");
@@ -46,7 +46,7 @@ static loff_t blob_offset;
 
 char *files[1000];
 
-int __spdk__open(const char *__file, int __oflag, ...)
+int __spdk_open(const char *__file, int __oflag, ...)
 {
 	SPDK_WARNLOG("OPENNING %s\n", __file);
 	va_list v_arg_list;
@@ -76,7 +76,7 @@ int __spdk__open(const char *__file, int __oflag, ...)
 	return TESTFD + monopoly_open(__file, __oflag);
 }
 
-int __spdk__close(int __fd)
+int __spdk_close(int __fd)
 {
 	if (__fd < TESTFD) {
 		return syscall(SYS_close, __fd);
@@ -115,19 +115,25 @@ __off_t __spdk_lseek(int __fd, __off_t __offset, int __whence)
 int __spdk_stat(const char *__restrict__ __file, struct stat *__restrict__ __buf)
 {
 		if (!spdk_ptop_blobfile(__file)) {
-			stat(__file, __buf);
+			return stat(__file, __buf);
 		}
-		monopoly_stat(__file, __buf);
+		return monopoly_stat(__file, __buf);
 }
 
-// void *__spdk__malloc(size_t __size)
-// {
-// 	if(__size % 4096)
-// 	{
-//     	return r_malloc(__size);
-// 	}
-// 	if(g_filesystem)
-// 		spdk_malloc(__size, 4096, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
-// 	else
-// 		return r_malloc(__size);
-// }
+static void *(*r_malloc)(size_t) = NULL;
+void *__spdk_malloc(size_t __size)
+{
+	if(r_malloc == NULL) {
+		r_malloc = dlsym(RTLD_NEXT, "malloc");
+	}
+	if(!spdkfs_mm_inited()) {
+		return r_malloc(__size);
+	} else {
+		return spdkfs_malloc(__size);
+	}
+}
+
+
+int __spdk_unlink(const char *pathname) {
+
+}

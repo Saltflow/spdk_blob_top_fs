@@ -9,6 +9,12 @@ static struct radix_tree_root spdk_mem_root = RADIX_TREE_INIT();
 static void *(*r_malloc)(size_t) = NULL;
 static void (*r_free)(void *ptr) = NULL;
 
+
+bool spdkfs_mm_inited()
+{
+	return initialized;
+}
+
 bool spdkfs_mm_init(struct spdk_filesystem *fs)
 {
 	r_malloc = dlsym(RTLD_NEXT, "malloc");
@@ -16,6 +22,7 @@ bool spdkfs_mm_init(struct spdk_filesystem *fs)
 	curr_filesystem = fs;
 	initialized = true;
 	radix_tree_init();
+	return true;
 }
 
 void *spdkfs_malloc(size_t __size)
@@ -47,7 +54,7 @@ bool spdkfs_mm_free()
 {
 	char *left_mem;
 	int left_item_count = 0;
-	while (left_item_count =  radix_tree_gang_lookup(&spdk_mem_root, &left_mem, 0, 0xffff)) {
+	while (left_item_count =  radix_tree_gang_lookup(&spdk_mem_root, &left_mem, 0, 128)) {
 		for (int i = 0; i < left_item_count; ++i) {
 			radix_tree_delete(&spdk_mem_root, left_mem[i]);
 		}

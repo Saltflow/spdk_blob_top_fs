@@ -114,6 +114,7 @@ int monopoly_close(int __fd)
 	return 0;
 }
 
+// Note: blob have restricted that any size and offset be the multiple of io_unit_size
 ssize_t monopoly_read(int __fd, void *__buf, size_t __nbytes)
 {
 	assert(__fd != -1);
@@ -126,6 +127,7 @@ ssize_t monopoly_read(int __fd, void *__buf, size_t __nbytes)
 	return __nbytes;
 }
 
+// Note: blob have restricted that any size and offset be the multiple of io_unit_size
 ssize_t monopoly_write(int __fd, const void *__buf, size_t __nbytes)
 {
 	assert(__fd != -1);
@@ -166,7 +168,7 @@ int monopoly_stat(const char * __file, struct stat * __buf)
 
 	struct spdkfs_file_persist_ctx *file_meta;
 	size_t len;
-	spdk_blob_get_xattr_value(stat_blob, "file_persistent", file_meta, len);
+	spdk_blob_get_xattr_value(stat_blob, "file_persistent", &file_meta, &len);
 	assert(len == sizeof(struct spdkfs_file_persist_ctx));
 	__buf->st_ino = spdk_blob_get_id(stat_blob);
 	__buf->st_size = file_meta->f_size;

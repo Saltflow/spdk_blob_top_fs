@@ -1,4 +1,5 @@
 #include "spdkfs/fs.h"
+#include "spdkfs/io_mm.h"
 #include "file.h"
 #include "spdk/env.h"
 #include "thread_poller.h"
@@ -81,6 +82,7 @@ void load_simple_spdk_fs()
 	spdk_blob_stat(&ctx);
 	load_fs_operations();
 	load_root();
+	
 }
 
 void simple_fs_alloc_blob(struct spdk_filesystem *fs, struct fs_blob_ctx *cb_args);
@@ -181,6 +183,5 @@ void unload_simple_spdk_fs()
 	done = false;
 	generic_poller(g_spdkfs_thread, stop_subsystem, &done, &done);
 	free(g_filesystem);
-	spdk_thread_lib_fini();
 	spdk_env_dpdk_post_fini();
 }

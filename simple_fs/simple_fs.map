@@ -14,11 +14,13 @@
 	write;
 	lseek;
 	stat;
+	malloc;
 	monopoly_open;
 	monopoly_close;
 	monopoly_read;
 	monopoly_write;
 	monopoly_create;
 	monopoly_lseek;
+	monopoly_unlink;
 	local: *;
 };

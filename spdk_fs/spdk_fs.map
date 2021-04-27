@@ -9,6 +9,8 @@
 
 	spdkfs_mm_inited;
 	spdkfs_mm_init;
+	spdkfs_mm_free;
+	spdkfs_mm_find;
 	spdkfs_malloc;
 	spdkfs_realloc;
 	spdkfs_free;

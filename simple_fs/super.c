@@ -83,6 +83,9 @@ void load_simple_spdk_fs()
 	load_fs_operations();
 	load_root();
 	spdkfs_mm_init(g_filesystem);
+	g_filesystem->_buffer.buffer = spdk_malloc(0x100000, spdk_bs_get_io_unit_size(g_filesystem->bs),
+			NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+	g_filesystem->_buffer.buf_size = 0x100000;
 }
 
 void simple_fs_alloc_blob(struct spdk_filesystem *fs, struct fs_blob_ctx *cb_args);
@@ -177,6 +180,7 @@ static void stop_subsystem(void *ctx)
 void unload_simple_spdk_fs()
 {
 	bool done = false;
+	spdkfs_mm_free();
 	g_filesystem->super_blob->root->d_op->spdk_closedir(g_filesystem->super_blob->root);
 	done = false;
 	generic_poller(g_spdkfs_thread, unload_bs_fn, &done, &done);

@@ -13,4 +13,8 @@ void *spdkfs_realloc(void *buffer, size_t __size);
 
 void spdkfs_free(void *ptr);
 
+bool spdkfs_mm_find(void *ptr);
+
+bool spdkfs_mm_free();
+
 #endif

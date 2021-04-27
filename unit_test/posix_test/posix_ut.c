@@ -45,25 +45,25 @@
 
 #include "spdkfs/fs.h"
 
-#include"../../simple_fs/monopoly_ops.h"
 int main()
 {
-	int fd = monopoly_create("spdkfs/hello", O_CREAT);
+	int fd = creat("spdkfs/hello", O_CREAT);
 	if (fd == -1) {
-		fd = monopoly_open("spdkfs/hello", O_CREAT);
+		fd = open("spdkfs/hello", O_CREAT);
 	}
+	assert(fd > 10000);
 	char *buffer = malloc(4096);
 	memset(buffer, 65, 4096);
 	buffer[14] = '\0';
 	SPDK_WARNLOG("%s\n", buffer);
-	monopoly_write(fd, buffer, 4096);
+	write(fd, buffer, 4096);
 	memset(buffer, 66, 4096);
 	buffer[14] = '\0';
 	SPDK_WARNLOG("%s\n", buffer);
-	monopoly_lseek(fd, 0, SEEK_SET);
-	monopoly_read(fd, buffer, 4096);
+	lseek(fd, 0, SEEK_SET);
+	read(fd, buffer, 4096);
 	buffer[14] = '\0';
 	SPDK_WARNLOG("%s\n", buffer);
-	monopoly_close(fd);
+	close(fd);
 	return 0;
 }

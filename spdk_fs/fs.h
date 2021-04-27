@@ -22,6 +22,12 @@ struct spdk_super_blob {
 	struct spdk_blob *blob;
 };
 
+// FIXME : Potential data racing
+struct spdk_io_shared_buffer {
+	void* buffer;
+	size_t buf_size;
+};
+
 struct spdk_filesystem {
 	struct spdk_super_blob *super_blob;
 	struct spdk_blob_store *bs;
@@ -29,6 +35,9 @@ struct spdk_filesystem {
 	struct spdk_io_channel *io_channel;
 
 	struct spdk_fs_operations *operations;
+
+	struct spdk_io_shared_buffer _buffer;
+	
 
 	TAILQ_ENTRY(spdk_blob *)	open_blob;
 };

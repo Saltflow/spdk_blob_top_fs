@@ -180,3 +180,9 @@ int monopoly_stat(const char * __file, struct stat * __buf)
 	__buf->st_uid = file_meta->i_uid;
 	return 0;
 }
+
+
+int monopoly_unlink(char *__filepath)
+{
+
+}

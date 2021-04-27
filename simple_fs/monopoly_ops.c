@@ -125,7 +125,17 @@ ssize_t monopoly_read(int __fd, void *__buf, size_t __nbytes)
 	if (__nbytes % io_unit) {
 		__nbytes = UPPER_DIV(__nbytes, io_unit);
 	}
-	file->f_op->spdk_read(file, __nbytes, __buf);
+	if(!spdkfs_mm_find(__buf)) {
+		for(int i=0; i < UPPER_DIV(__nbytes, g_filesystem->_buffer.buf_size); ++i) {
+			int read_bytes = spdk_min(g_filesystem->_buffer.buf_size, __nbytes - i * g_filesystem->_buffer.buf_size);
+			file->f_op->spdk_read(file, __nbytes, g_filesystem->_buffer.buffer);
+			memcpy(__buf + i *  g_filesystem->_buffer.buf_size, g_filesystem->_buffer.buffer,
+				read_bytes);
+			i+= read_bytes;
+		}
+	} else {
+		file->f_op->spdk_read(file, __nbytes, __buf);
+	}
 	return __nbytes;
 }
 
@@ -138,7 +148,17 @@ ssize_t monopoly_write(int __fd, const void *__buf, size_t __nbytes)
 	if (__nbytes % io_unit) {
 		__nbytes = UPPER_DIV(__nbytes, io_unit);
 	}
-	file->f_op->spdk_write(file, __nbytes, __buf);
+		if(!spdkfs_mm_find(__buf)) {
+		for(int i=0; i < UPPER_DIV(__nbytes, g_filesystem->_buffer.buf_size);) {
+			int write_bytes = spdk_min(g_filesystem->_buffer.buf_size, __nbytes - i * g_filesystem->_buffer.buf_size);
+			memcpy(__buf + i *  g_filesystem->_buffer.buf_size, g_filesystem->_buffer.buffer,
+				write_bytes);
+			file->f_op->spdk_write(file, __nbytes, g_filesystem->_buffer.buffer);
+			i += write_bytes;
+		}
+	} else {
+		file->f_op->spdk_write(file, __nbytes, __buf);
+	}
 	return __nbytes;
 }
 

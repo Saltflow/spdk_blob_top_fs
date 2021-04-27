@@ -12,7 +12,7 @@
  * \param mode offset posistion, now support SEEK_CUR SEEK_SET
  */
 
-void simple_fs_lseek(struct spdkfs_file *, loff_t, int);
+void simple_fs_lseek(struct spdkfs_file *file, loff_t offset, int mode);
 
 /**
  * Read the data from the given file
@@ -22,7 +22,7 @@ void simple_fs_lseek(struct spdkfs_file *, loff_t, int);
  * \param buffer buffer for data
 \
  */
-void simple_fs_read(struct spdkfs_file *, size_t, void *);
+void simple_fs_read(struct spdkfs_file *file, size_t size, void * buffer);
 /**
  * Write the data to the given file
  *
@@ -32,21 +32,21 @@ void simple_fs_read(struct spdkfs_file *, size_t, void *);
 \
  */
 
-void simple_fs_write(struct spdkfs_file *, size_t, void *);
+void simple_fs_write(struct spdkfs_file *file, size_t size, void * buffer);
 /**
  * Filling the file persistent structure with the give blob
  * Note that before calling ,file->fs and file->_blob must be properly set
  * \param file file structure to fill
  *
  */
-void simple_fs_open(struct spdkfs_file *);
+void simple_fs_open(struct spdkfs_file *file);
 /**
  * Filling the file persistent structure with the give blob
  * Note that before calling ,file->fs and file->_blob must be properly set
  * \param file file structure to fill
  *
  */
-void simple_fs_create(struct spdkfs_file *);
+void simple_fs_create(struct spdkfs_file *file);
 
 /**
  * Remove the file's resource
@@ -54,7 +54,7 @@ void simple_fs_create(struct spdkfs_file *);
  * \param file file structure to fill
  *
  */
-void simple_fs_release(struct spdkfs_file *);
+void simple_fs_release(struct spdkfs_file *file);
 
 
 

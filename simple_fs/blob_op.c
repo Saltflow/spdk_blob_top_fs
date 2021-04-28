@@ -169,7 +169,24 @@ bool generic_blob_resize(struct spdk_filesystem *fs, struct spdk_blob *blob, siz
 	bool done = false;
 	struct blob_rw_ctx rw_ctx = {&done, NULL, fs, blob, NULL, size,  NULL, NULL};
 	generic_poller(fs->op_thread, resize_blob, &rw_ctx, &done);
-	if (rw_ctx.blob_errno) {
+	if (!rw_ctx.blob_errno) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+static unlink_blob(void *context)
+{
+	g_filesystem->operations->free_blob(g_filesystem, context);
+}
+
+bool blob_unlink(spdk_blob_id op_blob_id)
+{
+	bool done;
+	struct fs_blob_ctx blb_ctx = {&done, 0, NULL, op_blob_id};
+	generic_poller(g_filesystem->op_thread, unlink_blob, &blb_ctx, &done);
+	if(!blb_ctx.fs_errno) {
 		return true;
 	} else {
 		return false;

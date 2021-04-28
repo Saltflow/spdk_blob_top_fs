@@ -115,8 +115,8 @@ struct fs_blob_ctx {
 
 
 struct spdk_fs_operations {
-	void (*alloc_blob)(struct spdk_filesystem *sb, struct fs_blob_ctx *);
-	void (*free_blob)(struct spdk_blob *, struct fs_blob_ctx *);
+	void (*alloc_blob)(struct spdk_filesystem *fs, struct fs_blob_ctx *);
+	void (*free_blob)(struct spdk_filesystem *fs, struct fs_blob_ctx *cb_args);
 };
 
 

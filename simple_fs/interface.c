@@ -10,9 +10,6 @@
 extern struct fdtable g_fdtable;
 extern struct spdk_filesystem *g_filesystem;
 
-static volatile struct spdk_blob *test_blob = NULL;
-static volatile char *general_buffer = NULL;
-
 static bool spdk_ptop_blobfile(const char *__file);
 
 static int (*r_open)(const char *__file, int __oflag, ...) = NULL;
@@ -30,15 +27,11 @@ static bool spdk_ptop_blobfile(const char *__file)
 	if (strlen(__file) < 5) {
 		return false;
 	}
-	if (memcmp(__file, "spdkdir/", 8)) {
+	if (memcmp(__file, "spdkfs/", 7)) {
 		return false;
 	}
 	return true;
 }
-
-static loff_t blob_offset;
-
-char *files[1000];
 
 int __spdk_open(const char *__file, int __oflag, ...)
 {
@@ -47,13 +40,11 @@ int __spdk_open(const char *__file, int __oflag, ...)
 	va_start(v_arg_list, __oflag);
 	if (!spdk_ptop_blobfile(__file)) {
 		int ret = r_open(__file, __oflag, v_arg_list);
-		printf("%d %s\n", ret, __file);
 		va_end(v_arg_list);
 		return ret;
 	}
 	// Create
-	if (__oflag | O_CREAT != 0) {
-		printf("create !");
+	if ((__oflag | O_CREAT) != 0) {
 		if (g_fdtable._file_count > SPDK_MAX_FILE_CNT) {
 			SPDK_ERRLOG("FD table already full!\n");
 			return -1;
@@ -65,7 +56,6 @@ int __spdk_open(const char *__file, int __oflag, ...)
 		}
 		return TESTFD + ret;
 	}
-	spdk_blob_id open_id;
 	return TESTFD + monopoly_open(__file, __oflag);
 }
 
@@ -82,7 +72,7 @@ ssize_t __spdk_read(int __fd, void *__buf, size_t __nbytes)
 	if (__fd < TESTFD) {
 		return syscall(SYS_read, __fd, __buf, __nbytes);
 	}
-	int ret = monopoly_read(__fd  - TESTFD, general_buffer, __nbytes);
+	int ret = monopoly_read(__fd  - TESTFD, __buf, __nbytes);
 	return ret;
 }
 ssize_t __spdk_write(int __fd, const void *__buf, size_t __nbytes)
@@ -90,7 +80,7 @@ ssize_t __spdk_write(int __fd, const void *__buf, size_t __nbytes)
 	if (__fd < TESTFD) {
 		return syscall(SYS_write, __fd, __buf, __nbytes);
 	}
-	return monopoly_write(__fd  - TESTFD, general_buffer, __nbytes);
+	return monopoly_write(__fd  - TESTFD, __buf, __nbytes);
 }
 __off_t __spdk_lseek(int __fd, __off_t __offset, int __whence)
 {

@@ -201,8 +201,16 @@ int monopoly_stat(const char * __file, struct stat * __buf)
 	return 0;
 }
 
-
-int monopoly_unlink(char *__filepath)
+// Find the dirent entry, then modify workdir to remove it
+int monopoly_unlink(const char *__filepath)
 {
-
+	int dirent_idx = find_dir(__filepath, g_workdir);
+	if(dirent_idx == -1) {
+		return -1;
+	}
+	blob_unlink(g_workdir->dirents[dirent_idx]._id);
+	for(int i=dirent_idx; i < g_workdir->dir_persist->d_dirent_count - 1; ++i) {
+		g_workdir->dirents[i] = g_workdir->dirents[i+1];
+	}
+	--g_workdir->dir_persist->d_dirent_count;
 }

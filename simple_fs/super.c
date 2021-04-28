@@ -89,7 +89,7 @@ void load_simple_spdk_fs()
 }
 
 void simple_fs_alloc_blob(struct spdk_filesystem *fs, struct fs_blob_ctx *cb_args);
-void simple_fs_free_blob(struct spdk_blob *op_blob, struct fs_blob_ctx *cb_args);
+void simple_fs_free_blob(struct spdk_filesystem *fs, struct fs_blob_ctx *cb_args);
 
 static const struct spdk_fs_operations simple_fs_operations = {
 	.alloc_blob		= simple_fs_alloc_blob,
@@ -145,9 +145,9 @@ static void delete_blob_finished(void *cb_arg, int bserrno)
 	return;
 }
 
-void simple_fs_free_blob(struct spdk_blob *op_blob, struct fs_blob_ctx *cb_args)
+void simple_fs_free_blob(struct spdk_filesystem *fs, struct fs_blob_ctx *cb_args)
 {
-	spdk_bs_delete_blob(g_filesystem->bs, spdk_blob_get_id(op_blob), delete_blob_finished, cb_args);
+	spdk_bs_delete_blob(fs->bs, cb_args->op_blob_id, delete_blob_finished, cb_args);
 }
 
 static void unload_complete_cb(void *cb_arg, int bserrno)

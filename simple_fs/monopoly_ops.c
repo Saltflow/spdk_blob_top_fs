@@ -151,7 +151,7 @@ ssize_t monopoly_write(int __fd, const void *__buf, size_t __nbytes)
 		if(!spdkfs_mm_find(__buf)) {
 		for(int i=0; i < UPPER_DIV(__nbytes, g_filesystem->_buffer.buf_size);) {
 			int write_bytes = spdk_min(g_filesystem->_buffer.buf_size, __nbytes - i * g_filesystem->_buffer.buf_size);
-			memcpy(__buf + i *  g_filesystem->_buffer.buf_size, g_filesystem->_buffer.buffer,
+			memcpy(g_filesystem->_buffer.buffer, __buf + i *  g_filesystem->_buffer.buf_size,
 				write_bytes);
 			file->f_op->spdk_write(file, __nbytes, g_filesystem->_buffer.buffer);
 			i += write_bytes;

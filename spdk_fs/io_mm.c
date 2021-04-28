@@ -10,24 +10,27 @@ static void *(*r_malloc)(size_t) = NULL;
 static void (*r_free)(void *ptr) = NULL;
 static void *(*r_realloc)(void *__ptr, size_t __size) = NULL;
 
-struct mm_entry{
-	void* ptr;
+struct mm_entry {
+	void *ptr;
 	bool used;
 };
 
 #define VBOX_NVME_IO_UNIT_SIZE 512
 #define MAX_IO_PTR_NUM 4096
 
-static struct mm_entry mm_table[MAX_IO_PTR_NUM] = {{0,0}};
+static struct mm_entry mm_table[MAX_IO_PTR_NUM] = {{0, 0}};
 static int mm_table_count = 0;
 
-static inline int find_next_entry() {
-	if(mm_table_count >= MAX_IO_PTR_NUM)
+static inline int find_next_entry()
+{
+	if (mm_table_count >= MAX_IO_PTR_NUM) {
 		return -1;
-	for (int i = mm_table_count; i != (mm_table_count  +MAX_IO_PTR_NUM- 1) % MAX_IO_PTR_NUM; i = ((i + 1) % MAX_IO_PTR_NUM))
-	{
-		if(!mm_table[i].used)
+	}
+	for (int i = mm_table_count; i != (mm_table_count  + MAX_IO_PTR_NUM - 1) % MAX_IO_PTR_NUM;
+	     i = ((i + 1) % MAX_IO_PTR_NUM)) {
+		if (!mm_table[i].used) {
 			return i;
+		}
 	}
 	return -1;
 }
@@ -96,15 +99,13 @@ bool spdkfs_mm_find(void *ptr)
 
 bool spdkfs_mm_free()
 {
-	for (int i = 0; i <=MAX_IO_PTR_NUM; ++i)
-	{
-		if(!mm_table_count) {
+	for (int i = 0; i <= MAX_IO_PTR_NUM; ++i) {
+		if (!mm_table_count) {
 			break;
 		}
-		if(mm_table[i].used)
-		{
-		   spdk_free(mm_table[i].ptr);
-		   mm_table_count--;
+		if (mm_table[i].used) {
+			spdk_free(mm_table[i].ptr);
+			mm_table_count--;
 		}
 	}
 	return true;

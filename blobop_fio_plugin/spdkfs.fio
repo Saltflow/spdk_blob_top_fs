@@ -1,0 +1,45 @@
+
+[global]
+thread=1
+group_reporting=1
+direct=1
+verify=0
+time_based=1
+runtime=40
+bs=4096
+size=526336
+iodepth=32
+rw=rw
+ioengine=spdk_sync
+filename=spdkdir/hello
+
+[bs=4096]
+stonewall
+description="variable bs"
+bs=4096
+
+[bs=108544]
+stonewall
+description="variable bs"
+bs=108544
+
+[bs=212992]
+stonewall
+description="variable bs"
+bs=212992
+
+[bs=317440]
+stonewall
+description="variable bs"
+bs=317440
+
+[bs=421888]
+stonewall
+description="variable bs"
+bs=421888
+
+[bs=526336]
+stonewall
+description="variable bs"
+bs=526336
+

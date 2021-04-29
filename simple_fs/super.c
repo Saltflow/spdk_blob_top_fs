@@ -83,9 +83,9 @@ void load_simple_spdk_fs()
 	load_fs_operations();
 	load_root();
 	spdkfs_mm_init(g_filesystem);
-	g_filesystem->_buffer.buffer = spdk_malloc(0x100000, spdk_bs_get_io_unit_size(g_filesystem->bs),
+	g_filesystem->_buffer.buffer = spdk_malloc(0x10000, spdk_bs_get_io_unit_size(g_filesystem->bs),
 				       NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
-	g_filesystem->_buffer.buf_size = 0x100000;
+	g_filesystem->_buffer.buf_size = 0x10000;
 }
 
 void simple_fs_alloc_blob(struct spdk_filesystem *fs, struct fs_blob_ctx *cb_args);

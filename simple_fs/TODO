@@ -4,5 +4,11 @@
 
 - [] Fsync
 
-## 
+## Subdirectory
+
+- [] discriminate file and dir at dirent
+
+- [] mkdir chdir rmdir
+
+
 

@@ -69,13 +69,12 @@ void *spdkfs_malloc(size_t __size)
 
 void *spdkfs_realloc(void *buffer, size_t __size)
 {
-	assert(r_malloc);
+	assert(r_realloc);
 	if (spdkfs_mm_find(buffer)) {
-		void *new_ptr = spdk_realloc(buffer, __size, VBOX_NVME_IO_UNIT_SIZE);
-		radix_tree_delete(&spdk_mem_root, buffer);
-		radix_tree_insert(&spdk_mem_root, new_ptr, NULL);
+		return spdk_realloc(buffer, __size, VBOX_NVME_IO_UNIT_SIZE);;
 	}
-	return r_realloc(buffer, __size);
+	volatile void* ptr = r_realloc(buffer, __size);
+	return ptr;
 }
 
 void spdkfs_free(void *ptr)

@@ -99,7 +99,9 @@ int __spdk_stat(const char *__restrict__ __file, struct stat *__restrict__ __buf
 }
 
 static void *(*r_malloc)(size_t) = NULL;
-void (*r_free)(void *__ptr) = NULL;
+static void (*r_free)(void *__ptr) = NULL;
+static void *(*r_realloc)(void *__ptr, size_t __size) = NULL;
+
 void *__spdk_malloc(size_t __size)
 {
 	if(r_malloc == NULL) {
@@ -120,9 +122,22 @@ void __spdk_free(void *__ptr)
 	if(!spdkfs_mm_inited()) {
 		return r_free(__ptr);
 	} else {
-		return spdk_free(__ptr);
+		return spdkfs_free(__ptr);
 	}
 }
+
+void *__spdk_realloc(void *__ptr, size_t __size)
+{
+	if(r_realloc == NULL) {
+		r_realloc = dlsym(RTLD_NEXT, "realloc");
+	}
+	if(!spdkfs_mm_inited()) {
+		return r_realloc(__ptr, __size);
+	} else {
+		return spdkfs_realloc(__ptr, __size);
+	}
+}
+
 
 int __spdk_unlink(const char *pathname) {
 	if (!spdk_ptop_blobfile(pathname)) {

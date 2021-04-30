@@ -15,6 +15,8 @@
 	lseek;
 	stat;
 	malloc;
+	free;
+	realloc;
 	monopoly_open;
 	monopoly_close;
 	monopoly_read;

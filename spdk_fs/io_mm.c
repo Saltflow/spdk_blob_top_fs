@@ -38,8 +38,9 @@ bool spdkfs_mm_inited()
 
 bool spdkfs_mm_init()
 {
-	if(initialized)
+	if (initialized) {
 		return true;
+	}
 	initialized = true;
 	radix_tree_init();
 	return true;
@@ -47,15 +48,14 @@ bool spdkfs_mm_init()
 
 void *spdkfs_malloc(size_t __size, usr_malloc u_malloc)
 {
-	if(__size % 4096)
-	{
-		void* ptr =  u_malloc(__size);
+	if (__size % 4096) {
+		void *ptr =  u_malloc(__size);
 		assert(ptr);
 		return ptr;
 	}
 	void *spdk_mem = spdk_malloc(__size, VBOX_NVME_IO_UNIT_SIZE, NULL, SPDK_ENV_SOCKET_ID_ANY,
 				     SPDK_MALLOC_SHARE);
-	if(!spdk_mem) {
+	if (!spdk_mem) {
 		SPDK_ERRLOG("Spdk malloc failed!\n");
 		return u_malloc(__size);
 	}

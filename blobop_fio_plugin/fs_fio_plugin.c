@@ -54,7 +54,6 @@
 int spdk_open_file(struct thread_data *td, struct fio_file *f)
 {
 	f->fd = monopoly_open(f->file_name, O_CREAT);
-	printf("%d\n", f->fd);
 	return 0;
 }
 

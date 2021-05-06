@@ -43,7 +43,8 @@
 #include "spdk_internal/thread.h"
 #include "spdk_internal/event.h"
 
-#include "spdkfs/fs.h"
+#include "../spdk_fs/fs.h"
+#include "../spdk_fs/io_mm.h"
 #include "config-host.h"
 #include "fio.h"
 #include "optgroup.h"
@@ -52,7 +53,7 @@
 
 int spdk_open_file(struct thread_data *td, struct fio_file *f)
 {
-	f->fd = monopoly_open(f->file_name, O_CREAT) - 10086;
+	f->fd = monopoly_open(f->file_name, O_CREAT);
 	printf("%d\n", f->fd);
 	return 0;
 }

@@ -110,7 +110,7 @@ void *__spdk_malloc(size_t __size)
 	if(!spdkfs_mm_inited()) {
 		return r_malloc(__size);
 	} else {
-		return spdkfs_malloc(__size);
+		return spdkfs_malloc(__size, r_malloc);
 	}
 }
 
@@ -122,7 +122,7 @@ void __spdk_free(void *__ptr)
 	if(!spdkfs_mm_inited()) {
 		return r_free(__ptr);
 	} else {
-		return spdkfs_free(__ptr);
+		return spdkfs_free(__ptr, r_free);
 	}
 }
 
@@ -134,7 +134,7 @@ void *__spdk_realloc(void *__ptr, size_t __size)
 	if(!spdkfs_mm_inited()) {
 		return r_realloc(__ptr, __size);
 	} else {
-		return spdkfs_realloc(__ptr, __size);
+		return spdkfs_realloc(__ptr, __size, r_realloc);
 	}
 }
 

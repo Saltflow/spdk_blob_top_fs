@@ -2,13 +2,9 @@
 #include "radix_tree.h"
 #include <dlfcn.h>
 
+#define SPDK_MM_ENT_OFFSET 996
 static bool initialized = false;
-static struct spdk_filesystem *curr_filesystem;
 static struct radix_tree_root spdk_mem_root = RADIX_TREE_INIT();
-
-static void *(*r_malloc)(size_t) = NULL;
-static void (*r_free)(void *ptr) = NULL;
-static void *(*r_realloc)(void *__ptr, size_t __size) = NULL;
 
 struct mm_entry {
 	void *ptr;
@@ -40,52 +36,54 @@ bool spdkfs_mm_inited()
 	return initialized;
 }
 
-bool spdkfs_mm_init(struct spdk_filesystem *fs)
+bool spdkfs_mm_init()
 {
-	r_malloc = dlsym(RTLD_NEXT, "malloc");
-	r_free = dlsym(RTLD_NEXT, "free");
-	r_realloc = dlsym(RTLD_NEXT, "realloc");
-	curr_filesystem = fs;
+	if(initialized)
+		return true;
 	initialized = true;
 	radix_tree_init();
 	return true;
 }
 
-void *spdkfs_malloc(size_t __size)
+void *spdkfs_malloc(size_t __size, usr_malloc u_malloc)
 {
-	assert(r_malloc);
-	if (__size % 4096) {
-		return r_malloc(__size);
+	if(__size % 4096)
+	{
+		void* ptr =  u_malloc(__size);
+		assert(ptr);
+		return ptr;
 	}
 	void *spdk_mem = spdk_malloc(__size, VBOX_NVME_IO_UNIT_SIZE, NULL, SPDK_ENV_SOCKET_ID_ANY,
 				     SPDK_MALLOC_SHARE);
+	if(!spdk_mem) {
+		SPDK_ERRLOG("Spdk malloc failed!\n");
+		return u_malloc(__size);
+	}
 	int next_ent =  find_next_entry();
 	assert(next_ent != -1);
 	mm_table[next_ent].used = true;
 	mm_table[next_ent].ptr = spdk_mem;
-	radix_tree_insert(&spdk_mem_root, spdk_mem, next_ent);
+	radix_tree_insert(&spdk_mem_root, spdk_mem, next_ent + SPDK_MM_ENT_OFFSET);
 	return spdk_mem;
 }
 
-void *spdkfs_realloc(void *buffer, size_t __size)
+void *spdkfs_realloc(void *buffer, size_t __size, usr_realloc u_realloc)
 {
-	assert(r_realloc);
 	if (spdkfs_mm_find(buffer)) {
 		return spdk_realloc(buffer, __size, VBOX_NVME_IO_UNIT_SIZE);;
 	}
-	volatile void* ptr = r_realloc(buffer, __size);
-	return ptr;
+	return u_realloc(buffer, __size);
 }
 
-void spdkfs_free(void *ptr)
+void spdkfs_free(void *ptr, usr_free u_free)
 {
 	if (spdkfs_mm_find(ptr)) {
 		int next_ent = radix_tree_delete(&spdk_mem_root, ptr);
-		mm_table[next_ent].used = false;
+		mm_table[next_ent - SPDK_MM_ENT_OFFSET].used = false;
 		spdk_free(ptr);
 		return;
 	}
-	return r_free(ptr);
+	return u_free(ptr);
 }
 
 bool spdkfs_mm_find(void *ptr)

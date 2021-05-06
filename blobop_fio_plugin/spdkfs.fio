@@ -11,7 +11,7 @@ size=526336
 iodepth=32
 rw=rw
 ioengine=spdk_sync
-filename=spdkdir/hello
+filename=spdkfs/hello
 
 [bs=4096]
 stonewall

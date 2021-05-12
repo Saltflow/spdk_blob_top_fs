@@ -123,7 +123,7 @@ ssize_t monopoly_read(int __fd, void *__buf, size_t __nbytes)
 	struct spdkfs_file *file = g_fdtable.open_files[__fd];
 	int io_unit = spdk_bs_get_io_unit_size(file->fs->bs);
 	if (__nbytes % io_unit) {
-		__nbytes = UPPER_DIV(__nbytes, io_unit);
+		__nbytes = UPPER_DIV(__nbytes, io_unit) * io_unit;
 	}
 	if(!spdkfs_mm_find(__buf)) {
 		for(int i=0; i < UPPER_DIV(__nbytes, g_filesystem->_buffer.buf_size); ++i) {
@@ -131,7 +131,6 @@ ssize_t monopoly_read(int __fd, void *__buf, size_t __nbytes)
 			file->f_op->spdk_read(file, __nbytes, g_filesystem->_buffer.buffer);
 			memcpy(__buf + i *  g_filesystem->_buffer.buf_size, g_filesystem->_buffer.buffer,
 				read_bytes);
-			i+= read_bytes;
 		}
 	} else {
 		file->f_op->spdk_read(file, __nbytes, __buf);
@@ -146,15 +145,14 @@ ssize_t monopoly_write(int __fd, const void *__buf, size_t __nbytes)
 	struct spdkfs_file *file = g_fdtable.open_files[__fd];
 	int io_unit = spdk_bs_get_io_unit_size(file->fs->bs);
 	if (__nbytes % io_unit) {
-		__nbytes = UPPER_DIV(__nbytes, io_unit);
+		__nbytes = UPPER_DIV(__nbytes, io_unit) * io_unit;
 	}
 		if(!spdkfs_mm_find(__buf)) {
-		for(int i=0; i < UPPER_DIV(__nbytes, g_filesystem->_buffer.buf_size);) {
+		for(int i=0; i < UPPER_DIV(__nbytes, g_filesystem->_buffer.buf_size); ++i) {
 			int write_bytes = spdk_min(g_filesystem->_buffer.buf_size, __nbytes - i * g_filesystem->_buffer.buf_size);
 			memcpy(g_filesystem->_buffer.buffer, __buf + i *  g_filesystem->_buffer.buf_size,
 				write_bytes);
 			file->f_op->spdk_write(file, __nbytes, g_filesystem->_buffer.buffer);
-			i += write_bytes;
 		}
 	} else {
 		file->f_op->spdk_write(file, __nbytes, __buf);

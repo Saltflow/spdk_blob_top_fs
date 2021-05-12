@@ -25,7 +25,7 @@ static inline size_t get_blob_size(struct spdk_blob* blob, struct spdk_blob_stor
 }
 
 
-void simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer)
+ssize_t simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer)
 {
 	assert(size % 512 == 0);
 	if (file->f_pos + size > file->file_persist->f_size) {
@@ -37,7 +37,7 @@ void simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer)
 	spdk_blob_set_xattr(file->_blob, "file_persistent", file->file_persist,
 			    sizeof(struct spdkfs_file_persist_ctx));
 }
-void simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer)
+ssize_t simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer)
 {
 	size_t file_max_size = get_blob_size(file->_blob, file->fs->bs);
 	if (file->f_pos + size > file_max_size) {

@@ -22,7 +22,7 @@ void simple_fs_lseek(struct spdkfs_file *file, loff_t offset, int mode);
  * \param buffer buffer for data
 \
  */
-void simple_fs_read(struct spdkfs_file *file, size_t size, void * buffer);
+ssize_t simple_fs_read(struct spdkfs_file *file, size_t size, void * buffer);
 /**
  * Write the data to the given file
  *
@@ -32,7 +32,7 @@ void simple_fs_read(struct spdkfs_file *file, size_t size, void * buffer);
 \
  */
 
-void simple_fs_write(struct spdkfs_file *file, size_t size, void * buffer);
+ssize_t simple_fs_write(struct spdkfs_file *file, size_t size, void * buffer);
 /**
  * Filling the file persistent structure with the give blob
  * Note that before calling ,file->fs and file->_blob must be properly set

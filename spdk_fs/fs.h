@@ -123,8 +123,8 @@ struct spdk_fs_operations {
 // All file operations should be perform at upper layer
 struct spdk_file_operations {
 	void (*spdk_lseek)(struct spdkfs_file *file, loff_t offset, int mode);
-	void (*spdk_read)(struct spdkfs_file *file, size_t size, void *buffer);
-	void (*spdk_write)(struct spdkfs_file *file, size_t size, void *buffer);
+	ssize_t (*spdk_read)(struct spdkfs_file *file, size_t size, void *buffer);
+	ssize_t (*spdk_write)(struct spdkfs_file *file, size_t size, void *buffer);
 
 	void (*spdk_open)(struct spdkfs_file *file);
 	void (*spdk_close)(struct spdkfs_file *file);

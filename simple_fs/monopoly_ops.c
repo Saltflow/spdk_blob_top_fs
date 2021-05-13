@@ -122,20 +122,23 @@ ssize_t monopoly_read(int __fd, void *__buf, size_t __nbytes)
 	assert(__fd != -1);
 	struct spdkfs_file *file = g_fdtable.open_files[__fd];
 	int io_unit = spdk_bs_get_io_unit_size(file->fs->bs);
-	if (__nbytes % io_unit) {
-		__nbytes = UPPER_DIV(__nbytes, io_unit) * io_unit;
+	size_t real_io_unit = __nbytes / io_unit; /* Round to io_unit, which might be different from the general spdk buffer size*/
+	if(real_io_unit <= 0 ){
+		return 0;
 	}
-	if(!spdkfs_mm_find(__buf)) {
-		for(int i=0; i < UPPER_DIV(__nbytes, g_filesystem->_buffer.buf_size); ++i) {
-			int read_bytes = spdk_min(g_filesystem->_buffer.buf_size, __nbytes - i * g_filesystem->_buffer.buf_size);
-			file->f_op->spdk_read(file, __nbytes, g_filesystem->_buffer.buffer);
+	size_t real_read_bytes = 0;
+	if(!spdkfs_mm_find(__buf)) {  /* We need copy the data from spdk buffer to user data */
+		for(int i=0; i < UPPER_DIV(real_io_unit * io_unit, g_filesystem->_buffer.buf_size); ++i) {
+			int read_bytes = spdk_min(g_filesystem->_buffer.buf_size,
+				real_io_unit * io_unit - i * g_filesystem->_buffer.buf_size);
+			real_read_bytes += file->f_op->spdk_read(file, read_bytes, g_filesystem->_buffer.buffer);
 			memcpy(__buf + i *  g_filesystem->_buffer.buf_size, g_filesystem->_buffer.buffer,
 				read_bytes);
 		}
 	} else {
-		file->f_op->spdk_read(file, __nbytes, __buf);
+		real_read_bytes = file->f_op->spdk_read(file, real_io_unit * io_unit, __buf);
 	}
-	return __nbytes;
+	return real_read_bytes;
 }
 
 // Note: blob have restricted that any size and offset be the multiple of io_unit_size
@@ -144,20 +147,22 @@ ssize_t monopoly_write(int __fd, const void *__buf, size_t __nbytes)
 	assert(__fd != -1);
 	struct spdkfs_file *file = g_fdtable.open_files[__fd];
 	int io_unit = spdk_bs_get_io_unit_size(file->fs->bs);
-	if (__nbytes % io_unit) {
-		__nbytes = UPPER_DIV(__nbytes, io_unit) * io_unit;
+	size_t real_io_unit = __nbytes / io_unit;
+		if(real_io_unit <= 0 ){
+		return 0;
 	}
-		if(!spdkfs_mm_find(__buf)) {
-		for(int i=0; i < UPPER_DIV(__nbytes, g_filesystem->_buffer.buf_size); ++i) {
+	size_t real_write_bytes = 0;
+	if(!spdkfs_mm_find(__buf)) {
+		for(int i=0; i < UPPER_DIV(real_io_unit * io_unit, g_filesystem->_buffer.buf_size); ++i) {
 			int write_bytes = spdk_min(g_filesystem->_buffer.buf_size, __nbytes - i * g_filesystem->_buffer.buf_size);
 			memcpy(g_filesystem->_buffer.buffer, __buf + i *  g_filesystem->_buffer.buf_size,
 				write_bytes);
-			file->f_op->spdk_write(file, __nbytes, g_filesystem->_buffer.buffer);
+			real_write_bytes += file->f_op->spdk_write(file, write_bytes, g_filesystem->_buffer.buffer);
 		}
 	} else {
-		file->f_op->spdk_write(file, __nbytes, __buf);
+		real_write_bytes = file->f_op->spdk_write(file, __nbytes, __buf);
 	}
-	return __nbytes;
+	return real_write_bytes;
 }
 
 

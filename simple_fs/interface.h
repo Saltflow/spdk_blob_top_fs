@@ -33,3 +33,8 @@ void *malloc (size_t __size) __attribute__((weak, alias("__spdk_malloc")));
 void free(void *__ptr) __attribute__((weak, alias("__spdk_free")));
 
 void *realloc(void *__ptr, size_t __size) __attribute__((weak, alias("__spdk_realloc")));
+
+
+// NOTE: SPDKFS ONLY
+
+int spdkfs_load_bdev();

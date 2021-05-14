@@ -39,7 +39,7 @@ ssize_t simple_fs_read(struct spdkfs_file *file, size_t size, void *buffer)
 		spdk_blob_set_xattr(file->_blob, "file_persistent", file->file_persist,
 					sizeof(struct spdkfs_file_persist_ctx));
 		return size;
-	} 
+	}
 	return 0;
 }
 ssize_t simple_fs_write(struct spdkfs_file *file, size_t size, void *buffer)

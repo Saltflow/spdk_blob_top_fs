@@ -37,4 +37,4 @@ void *realloc(void *__ptr, size_t __size) __attribute__((weak, alias("__spdk_rea
 
 // NOTE: SPDKFS ONLY
 
-int spdkfs_load_bdev();
+int spdkfs_load_bdev(char* __path, char* __bdev_name);

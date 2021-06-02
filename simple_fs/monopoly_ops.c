@@ -5,16 +5,6 @@ struct fdtable g_fdtable;
 struct spdkfs_dir *g_workdir;
 extern struct spdk_filesystem *g_filesystem;
 
-static int find_dir(const char *filename, struct spdkfs_dir *_dir)
-{
-	for (unsigned i = 0; i < _dir->dir_persist->d_dirent_count; ++i) {
-		if (strcmp(filename, _dir->dirents[i]._name) == 0) {
-			return i;
-		}
-	}
-	return -1;
-}
-
 static int get_fd_from_table()
 {
 	if (g_fdtable._file_count >= SPDK_MAX_FILE_CNT) {
@@ -69,7 +59,7 @@ int monopoly_create(const char *__file, int __oflag)
 	assert(g_workdir->initialized);
 	struct spdkfs_file *new_file = malloc(sizeof(struct spdkfs_file));
 
-	if (find_dir(__file, g_workdir) != -1) {
+	if (spdkfs_dir_lookup(g_workdir, __file) != -1) {
 		SPDK_ERRLOG("File already exist!\n");
 		return -1;
 	}
@@ -90,7 +80,7 @@ int monopoly_create(const char *__file, int __oflag)
 
 int monopoly_open(const char *__file, int __oflag)
 {
-	int dirent_num = find_dir(__file, g_workdir);
+	int dirent_num = spdkfs_dir_lookup(g_workdir, __file);
 	if (dirent_num == -1) {
 		SPDK_ERRLOG("Cannot find file!\n");
 		return -1;
@@ -229,4 +219,20 @@ int monopoly_unlink(const char *__filepath)
 		g_workdir->dirents[i] = g_workdir->dirents[i+1];
 	}
 	--g_workdir->dir_persist->d_dirent_count;
+}
+
+
+int monopoly_chdir(const char *pathname) {
+	struct spdkfs_dir *new_dir = malloc(sizeof(struct spdkfs_dir));
+	blob_create(&new_dir->blob);
+	bind_dir_ops(new_dir);
+	new_dir->fs = g_filesystem;
+	new_dir->d_op->spdk_mkdir(new_dir);
+	new_dir->initialized = true;
+}
+
+int monopoly_mkdir(const char *pathname) {
+	if(g_workdir == NULL)
+		g_workdir = g_filesystem->super_blob->root;
+	
 }

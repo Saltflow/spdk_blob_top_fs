@@ -3,6 +3,7 @@
 
 #include "spdkfs/fs.h"
 #include "file.h"
+#include "dir.h"
 
 int monopoly_open(const char *__file, int __oflag);
 int monopoly_close(int __fd);
@@ -18,5 +19,6 @@ int monopoly_stat(const char *__file, struct stat *__buf);
 
 int monopoly_unlink(const char *__filepath);
 
-int mkdir(const char *pathname, mode_t mode);
+int monopoly_mkdir(const char *pathname);
+int monopoly_chdir(const char *pathname);
 #endif

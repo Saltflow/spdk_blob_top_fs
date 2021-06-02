@@ -48,6 +48,6 @@ make
 
 - ./blobop_fio_plugin : fio plugin
 
-- ./test : some test cases 
+- ./test : some test cases
 
 - ./scripts: code style check adopted from `spdk`

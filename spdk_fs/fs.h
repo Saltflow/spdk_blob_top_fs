@@ -13,7 +13,7 @@
 #include "spdk/string.h"
 
 #define SPDK_MAX_FILE_CNT 256
-#define SPDK_MAX_NAME_COUNT 50
+#define SPDK_MAX_NAME_COUNT 512
 
 #define UPPER_DIV(a,b) (a - 1) / b + 1
 

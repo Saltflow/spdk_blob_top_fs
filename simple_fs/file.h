@@ -60,18 +60,7 @@ void simple_fs_release(struct spdkfs_file *file);
 
 
 void simple_fs_close(struct spdkfs_file *file);
-/**
- * Read the data from the given directory
- *
- * \param dir
-\
- */
-void simple_dir_read(struct spdkfs_dir *dir);
-void simple_dir_write(struct spdkfs_dir *dir);
-void simple_dir_close(struct spdkfs_dir *dir);
-void simple_dir_create(struct spdkfs_dir *dir);
 
-void bind_dir_ops(struct spdkfs_dir *);
 
 void bind_file_ops(struct spdkfs_file *file);
 # endif
